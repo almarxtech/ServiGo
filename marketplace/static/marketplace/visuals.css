@@ -1,0 +1,72 @@
+/* Category discovery + contextual service illustrations + booking journey.
+   All illustrations are local CSS/Font Awesome; no third-party image downloads. */
+.category-general { --cat-bg:#dbeafe;--cat-main:#2464c1;--cat-accent:#a8dfff;--cat-deep:#1b4da1; }
+.category-plumbing { --cat-bg:#d7f2fd;--cat-main:#1470ae;--cat-accent:#7ed5eb;--cat-deep:#135894; }
+.category-electrical { --cat-bg:#fff0c9;--cat-main:#bd6e15;--cat-accent:#f9cf65;--cat-deep:#995c13; }
+.category-cleaning { --cat-bg:#d5fae9;--cat-main:#137d69;--cat-accent:#89e8c3;--cat-deep:#116956; }
+.category-painting { --cat-bg:#f5e1fd;--cat-main:#8e49ac;--cat-accent:#dfb4ef;--cat-deep:#713494; }
+.category-carpentry { --cat-bg:#ffead8;--cat-main:#a75d32;--cat-accent:#efb788;--cat-deep:#854627; }
+.category-hvac { --cat-bg:#dcf7ff;--cat-main:#1678b7;--cat-accent:#86e2f9;--cat-deep:#145a9c; }
+.category-appliance { --cat-bg:#e2eafa;--cat-main:#455eb4;--cat-accent:#b5c4f1;--cat-deep:#344992; }
+.category-garden { --cat-bg:#e6f6d7;--cat-main:#498131;--cat-accent:#b6e795;--cat-deep:#366b29; }
+.category-pest { --cat-bg:#ffebe4;--cat-main:#bd5945;--cat-accent:#f4ac87;--cat-deep:#9c4838; }
+.category-security { --cat-bg:#d7f3ec;--cat-main:#196e67;--cat-accent:#85d5c8;--cat-deep:#155650; }
+.category-moving { --cat-bg:#ffe9df;--cat-main:#b35d40;--cat-accent:#f7b69b;--cat-deep:#8b442e; }
+
+/* The shortcuts are real links and work with JavaScript disabled. */
+.category-explorer { display:flex; align-items:stretch; gap:12px; margin:20px 0 18px; overflow-x:auto; overscroll-behavior-x:contain; padding:4px 2px 12px; scrollbar-width:thin; }
+.category-shortcut { display:flex; flex-direction:column; justify-content:center; align-items:center; flex:0 0 auto; gap:10px; min-width:112px; max-width:158px; padding:14px 13px 12px; border:1px solid var(--sg-border); border-radius:17px; background:var(--sg-surface); color:var(--sg-text); text-decoration:none; text-align:center; font-size:.76rem; font-weight:750; line-height:1.25; transition:transform .23s ease,border-color .23s ease,box-shadow .23s ease; }
+.category-shortcut .shortcut-icon { display:grid; place-items:center; width:48px; height:48px; border-radius:15px; background:var(--cat-bg); color:var(--cat-main); font-size:21px; transition:transform .25s ease; }
+.category-shortcut:hover,.category-shortcut:focus-visible { color:var(--sg-text); transform:translateY(-3px); border-color:var(--cat-main); box-shadow:0 9px 22px rgba(23,61,91,.09); }
+.category-shortcut:hover .shortcut-icon { transform:rotate(-7deg) scale(1.07); }
+.category-shortcut.is-selected { border-color:var(--cat-main); outline:1px solid var(--cat-main); box-shadow:0 7px 22px rgba(22,91,151,.09); }
+.category-shortcut.is-selected .shortcut-icon { box-shadow:0 0 0 4px var(--sg-surface),0 0 0 5px var(--cat-main); }
+
+/* Slightly dimensional, illustration-like, yet no image requests. */
+.service-card-art.category-art { position:relative; isolation:isolate; overflow:hidden; background:linear-gradient(130deg,var(--cat-bg),var(--cat-accent))!important; }
+.service-card-art.category-art::before { content:""; position:absolute; width:190px; height:190px; right:-56px; top:-72px; border:1px solid rgba(255,255,255,.72); border-radius:50%; opacity:.72; }
+.service-card-art.category-art::after { content:""; position:absolute; width:110px; height:110px; left:-53px; bottom:-55px; border:2px dashed rgba(255,255,255,.65); border-radius:50%; }
+.category-art .art-shape { position:absolute; display:block; z-index:0; border-radius:26px; pointer-events:none; }
+.category-art .art-shape-one { width:78px; height:78px; right:19%; bottom:-28px; background:rgba(255,255,255,.28); transform:rotate(30deg); }
+.category-art .art-shape-two { width:34px; height:34px; left:19%; top:16px; background:rgba(255,255,255,.45); transform:rotate(-21deg); }
+.category-art .service-art-icon { position:relative; z-index:1; width:86px; height:86px; display:grid; place-items:center; border-radius:28px; background:rgba(255,255,255,.9)!important; color:var(--cat-main)!important; font-size:37px; box-shadow:0 17px 35px rgba(32,69,96,.11); transform:rotate(-5deg); }
+.category-art .art-sparkle { position:absolute; z-index:1; top:22px; left:calc(50% + 59px); color:var(--cat-deep); font-size:20px; opacity:.8; }
+.category-art .art-chip { z-index:2; }
+.service-card:hover .category-art .service-art-icon { transform:rotate(3deg) translateY(-5px) scale(1.08); }
+.table-service-icon.category-general,.booking-summary-icon.category-general { background:var(--cat-bg); color:var(--cat-main); }
+.table-service-icon[class*="category-"],.booking-summary-icon[class*="category-"] { background:var(--cat-bg); color:var(--cat-main); }
+.service-detail-banner { position:relative; isolation:isolate; display:flex; justify-content:center; align-items:center; min-height:158px; margin:-5px 0 27px; border-radius:20px; overflow:hidden; background:linear-gradient(115deg,var(--cat-bg),var(--cat-accent)); }
+.service-detail-banner .detail-shape { position:absolute; border-radius:50%; background:rgba(255,255,255,.22); }
+.service-detail-banner .detail-shape-one { width:180px; height:180px; left:-50px; top:-100px; border:2px solid rgba(255,255,255,.6); }
+.service-detail-banner .detail-shape-two { width:180px; height:180px; right:-60px; bottom:-115px; border:2px solid rgba(255,255,255,.55); }
+.detail-service-icon { position:relative; display:grid; place-items:center; width:105px; height:105px; border-radius:29px; background:rgba(255,255,255,.9); color:var(--cat-main); font-size:48px; box-shadow:0 16px 40px rgba(38,70,100,.13); transform:rotate(-5deg); }
+
+/* Timeline: status only; no fabricated history dates or provider actions. */
+.booking-table tbody tr.booking-progress-row { --bs-table-bg:transparent; }
+.booking-table tbody tr.booking-progress-row>td { padding:0 18px 18px; border-top:0; }
+.booking-table tbody tr.booking-progress-row:hover { --bs-table-bg:transparent; }
+.booking-journey { border:1px solid var(--sg-border); border-radius:14px; background:var(--sg-soft); padding:15px 20px 16px; }
+.journey-header { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px; margin-bottom:14px; }
+.journey-header>span:first-child { color:var(--sg-muted); font-size:.62rem; font-weight:850; letter-spacing:.09em; }
+.journey-header>span:first-child i { color:var(--sg-primary); margin-right:5px; }
+.journey-summary { color:var(--sg-muted); font-size:.7rem; font-weight:600; }
+.journey-steps { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); margin:0; padding:0; list-style:none; }
+.journey-step { position:relative; display:flex; flex-direction:column; align-items:center; gap:7px; color:var(--sg-muted); font-size:.73rem; font-weight:650; text-align:center; }
+.journey-step:not(:last-child)::after { content:""; position:absolute; left:calc(50% + 21px); top:13px; width:calc(100% - 42px); height:3px; background:var(--sg-border); border-radius:5px; }
+.journey-step.is-connected:not(:last-child)::after { background:linear-gradient(90deg,#12a58a,#4ac8ba); }
+.journey-marker { position:relative; z-index:1; display:grid; place-items:center; width:29px; height:29px; border-radius:50%; border:2px solid var(--sg-border); color:var(--sg-muted); background:var(--sg-surface); font-size:11px; }
+.journey-marker i { visibility:hidden; }
+.journey-step.is-done .journey-marker { background:#0f9b80; border-color:#0f9b80; color:#fff; }
+.journey-step.is-done .journey-marker i { visibility:visible; }
+.journey-step.is-current { color:var(--sg-text); font-weight:850; }
+.journey-step.is-current .journey-marker { outline:4px solid rgba(22,167,147,.15); }
+.booking-journey-cancelled { display:flex; align-items:center; gap:12px; }
+.journey-cancel-icon { flex:0 0 auto; display:grid; place-items:center; width:37px; height:37px; border-radius:12px; color:#a74f5d; background:#ffe9ec; }
+.booking-journey-cancelled strong,.booking-journey-cancelled small { display:block; }
+.booking-journey-cancelled strong { font-size:.79rem; color:var(--sg-text); }
+.booking-journey-cancelled small { color:var(--sg-muted); font-size:.71rem; line-height:1.5; margin-top:3px; }
+[data-bs-theme="dark"] .category-shortcut .shortcut-icon,[data-bs-theme="dark"] .category-art .service-art-icon,[data-bs-theme="dark"] .detail-service-icon { background:rgba(255,255,255,.90)!important; }
+[data-bs-theme="dark"] .booking-journey { background:var(--sg-surface); }
+[data-bs-theme="dark"] .journey-cancel-icon { background:#5a2d38; color:#ffd2d8; }
+@media(max-width:650px) { .category-explorer { gap:9px; margin-top:14px; } .category-shortcut { min-width:94px; max-width:125px; padding:11px 9px; font-size:.69rem; } .category-shortcut .shortcut-icon { width:41px; height:41px; } .booking-table tbody tr.booking-progress-row>td { padding:0 10px 15px; } .booking-journey { padding:13px 11px 14px; } .journey-summary { font-size:.66rem; } .journey-step { font-size:.67rem; } .service-detail-banner { min-height:125px; } }
+@media(prefers-reduced-motion:reduce) { .category-shortcut,.category-shortcut .shortcut-icon,.category-art .service-art-icon { transition:none!important; } .category-shortcut:hover,.category-shortcut:hover .shortcut-icon,.service-card:hover .category-art .service-art-icon { transform:none!important; } }

@@ -1,0 +1,127 @@
+{% extends 'marketplace/base.html' %}
+{% load service_visuals %}
+{% block title %}Dashboard | ServiGo{% endblock %}
+{% block content %}
+<div class="container container-wide dashboard-page">
+  <section class="dashboard-hero">
+    <div class="row align-items-center g-4">
+      <div class="col-lg-7 hero-content">
+        <span class="eyebrow"><span class="pulse-dot"></span> {% if profile.role == 'provider' %}Your provider workspace{% else %}Trusted home services, on demand{% endif %}</span>
+        <h1>{% if profile.role == 'provider' %}Your services.<br><span>All in one place.</span>{% else %}Your home deserves <span>the best care.</span>{% endif %}</h1>
+        <p>{% if profile.role == 'provider' %}Manage listings, track bookings and keep every customer happy from one beautiful dashboard.{% else %}Discover skilled professionals for cleaning, repairs, plumbing and more. Book with confidence in just a few clicks.{% endif %}</p>
+        <div class="hero-buttons">
+          {% if profile.role == 'provider' %}
+            <a href="{% url 'add_service' %}" class="btn btn-light btn-lg"><i class="fa-solid fa-plus me-2"></i>Add a service</a>
+            <a href="#my-bookings" class="hero-subtle-link">View bookings <i class="fa-solid fa-arrow-right ms-2"></i></a>
+          {% else %}
+            <a href="#explore" class="btn btn-light btn-lg">Explore services <i class="fa-solid fa-arrow-right ms-2"></i></a>
+            <a href="#my-bookings" class="hero-subtle-link">My bookings <i class="fa-solid fa-arrow-right ms-2"></i></a>
+          {% endif %}
+        </div>
+        <div class="hero-trust"><div class="trust-avatars"><span><i class="fa-solid fa-wrench"></i></span><span><i class="fa-solid fa-bolt"></i></span><span><i class="fa-solid fa-broom"></i></span></div><span>Everything your home needs, together.</span></div>
+      </div>
+      <div class="col-lg-5 d-none d-lg-flex justify-content-center">
+        <div class="hero-visual"><div class="visual-orbit orbit-one"></div><div class="visual-orbit orbit-two"></div><div class="hero-house"><i class="fa-solid fa-house-chimney-window"></i></div><div class="float-tile float-tile-top"><i class="fa-solid fa-shield-heart"></i><span>Trusted professionals</span></div><div class="float-tile float-tile-bottom"><i class="fa-solid fa-circle-check"></i><span>Hassle-free booking</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="stats-grid" aria-label="Dashboard overview">
+    <div class="stat-card"><span class="stat-icon blue"><i class="fa-solid fa-layer-group"></i></span><div><span class="stat-label">{% if profile.role == 'provider' %}My services{% else %}Available services{% endif %}</span><strong>{{ service_total }}</strong></div></div>
+    <div class="stat-card"><span class="stat-icon violet"><i class="fa-regular fa-calendar-check"></i></span><div><span class="stat-label">Total bookings</span><strong>{{ bookings_total }}</strong></div></div>
+    <div class="stat-card"><span class="stat-icon amber"><i class="fa-regular fa-clock"></i></span><div><span class="stat-label">Pending</span><strong>{{ pending_total }}</strong></div></div>
+    <div class="stat-card"><span class="stat-icon green"><i class="fa-solid fa-check-double"></i></span><div><span class="stat-label">Completed</span><strong>{{ completed_total }}</strong></div></div>
+  </section>
+
+  <section id="my-bookings" class="dashboard-section">
+    <div class="section-topline"><div><span class="section-kicker">YOUR ACTIVITY</span><h2>{% if profile.role == 'provider' %}Received bookings{% else %}My bookings{% endif %}</h2><p>{% if profile.role == 'provider' %}Review incoming requests, accept or reject them, and finish completed work. Customers manage their own dates.{% else %}Reschedule or delete your pending/accepted bookings here. Your provider will review rescheduled requests.{% endif %}</p></div><span class="count-tag">{{ bookings_total }} total</span></div>
+    <div class="booking-table-wrap">
+      <div class="table-responsive">
+        <table class="table booking-table align-middle mb-0">
+          <thead><tr><th>Service</th>{% if profile.role == 'provider' %}<th>Customer</th>{% endif %}<th>Appointment</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody>
+            {% for booking in bookings %}
+              <tr>
+                <td><div class="table-service"><span class="table-service-icon category-{{ booking.service.category|category_theme }}"><i class="fa-solid {{ booking.service.category|category_icon }}" aria-hidden="true"></i></span><div><strong>{{ booking.service.title }}</strong><small>#BK-{{ booking.id }}</small>{% if profile.role == 'provider' and booking.problem_description %}<small class="booking-job-notes" title="Customer requirements">{{ booking.problem_description|truncatechars:90 }}</small>{% endif %}</div></div></td>
+                {% if profile.role == 'provider' %}<td><span class="table-person"><i class="fa-regular fa-user me-2"></i>{{ booking.customer.username }}</span></td>{% endif %}
+                <td><span class="date-strong">{{ booking.booking_date|date:"d M Y" }}</span><small class="date-time">{{ booking.booking_date|date:"h:i A" }}</small></td>
+                <td><span class="status-pill status-{{ booking.status|lower }}"><span class="status-dot"></span>{{ booking.status }}</span></td>
+                <td><div class="table-actions">
+                    {% if profile.role == 'provider' %}
+                      {% if booking.status == 'Pending' %}
+                        <form method="post" action="{% url 'update_booking_status' booking.id 'Accepted' %}">{% csrf_token %}<button class="btn btn-action-accept btn-sm" type="submit" title="Accept request"><i class="fa-solid fa-check me-1"></i>Accept</button></form>
+                      {% elif booking.status == 'Accepted' %}
+                        <form method="post" action="{% url 'update_booking_status' booking.id 'Completed' %}">{% csrf_token %}<button class="btn btn-action-complete btn-sm" type="submit" title="Mark as completed">Complete</button></form>
+                      {% endif %}
+                      {% if booking.status == 'Pending' or booking.status == 'Accepted' %}
+                        <form method="post" action="{% url 'update_booking_status' booking.id 'Cancelled' %}" onsubmit="return confirm('Reject this booking request?')">{% csrf_token %}<button class="btn btn-outline-danger btn-sm" type="submit">Reject</button></form>
+                      {% else %}<span class="action-muted">No actions</span>{% endif %}
+                    {% else %}
+                      {% if booking.status == 'Pending' or booking.status == 'Accepted' %}
+                        <a class="btn btn-outline-primary btn-sm" href="{% url 'edit_booking' booking.id %}" title="Reschedule booking"><i class="fa-solid fa-pen me-1"></i>Edit</a>
+                      {% endif %}
+                      {% if booking.status != 'Completed' %}
+                        <a class="btn btn-outline-danger btn-sm" href="{% url 'delete_booking' booking.id %}" title="Delete booking"><i class="fa-regular fa-trash-can me-1"></i>Delete</a>
+                      {% endif %}
+                    {% endif %}
+                    {% if profile.role == 'customer' and booking.status == 'Completed' %}<a class="btn btn-review btn-sm" href="{% url 'add_review' booking.service.id %}"><i class="fa-regular fa-star me-1"></i> Review</a>{% endif %}
+                  </div></td>
+              </tr>
+              <tr class="booking-progress-row"><td colspan="{% if profile.role == 'provider' %}5{% else %}4{% endif %}">
+                <div class="booking-journey" aria-label="Booking {{ booking.id }} status: {{ booking.status }}">
+                  {% if booking.status == 'Cancelled' %}
+                    <div class="booking-journey-cancelled"><span class="journey-cancel-icon"><i class="fa-solid fa-ban" aria-hidden="true"></i></span><div><strong>Booking cancelled</strong><small>This request is closed. {% if profile.role == 'customer' %}You can explore available services to make a new booking.{% else %}No further action is needed for this request.{% endif %}</small></div></div>
+                  {% else %}
+                    <div class="journey-header"><span><i class="fa-solid fa-route" aria-hidden="true"></i> BOOKING PROGRESS</span><span class="journey-summary">{% if booking.status == 'Pending' %}Waiting for {% if profile.role == 'provider' %}your approval{% else %}provider approval{% endif %}{% elif booking.status == 'Accepted' %}Appointment confirmed{% elif booking.status == 'Completed' %}Service completed{% endif %}</span></div>
+                    <ol class="journey-steps" aria-label="Requested, accepted and completed stages">
+                      <li class="journey-step is-done {% if booking.status == 'Pending' %}is-current{% else %}is-connected{% endif %}" {% if booking.status == 'Pending' %}aria-current="step"{% endif %}><span class="journey-marker"><i class="fa-solid fa-check" aria-hidden="true"></i></span><span>Requested</span></li>
+                      <li class="journey-step {% if booking.status == 'Accepted' or booking.status == 'Completed' %}is-done{% endif %} {% if booking.status == 'Completed' %}is-connected{% endif %} {% if booking.status == 'Accepted' %}is-current{% endif %}" {% if booking.status == 'Accepted' %}aria-current="step"{% endif %}><span class="journey-marker"><i class="fa-solid fa-check" aria-hidden="true"></i></span><span>Accepted</span></li>
+                      <li class="journey-step {% if booking.status == 'Completed' %}is-done is-current{% endif %}" {% if booking.status == 'Completed' %}aria-current="step"{% endif %}><span class="journey-marker"><i class="fa-solid fa-check" aria-hidden="true"></i></span><span>Completed</span></li>
+                    </ol>
+                  {% endif %}
+                </div>
+              </td></tr>
+            {% empty %}
+              <tr><td colspan="{% if profile.role == 'provider' %}5{% else %}4{% endif %}"><div class="empty-state"><span><i class="fa-regular fa-calendar"></i></span><h3>No bookings yet</h3><p>{% if profile.role == 'provider' %}Bookings will appear here as soon as customers book your services.{% else %}Choose a service below to schedule your first appointment.{% endif %}</p></div></td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section id="explore" class="dashboard-section service-section">
+    <div class="section-topline"><div><span class="section-kicker">{% if profile.role == 'provider' %}YOUR BUSINESS{% else %}HANDPICKED FOR YOUR HOME{% endif %}</span><h2>{% if profile.role == 'provider' %}Manage your services{% else %}Explore services{% endif %}</h2><p>{% if profile.role == 'provider' %}Fine-tune your listings or create something new.{% else %}Find the right expert for your next home project.{% endif %}</p></div>
+      {% if profile.role == 'provider' %}<a href="{% url 'add_service' %}" class="btn btn-primary"><i class="fa-solid fa-plus me-2"></i>New service</a>{% endif %}
+    </div>
+    {% if profile.role != 'provider' %}
+      {% if categories %}
+        <nav class="category-explorer" aria-label="Browse by service category">
+          <a class="category-shortcut category-general {% if not selected_category %}is-selected{% endif %}" href="{% url 'dashboard' %}#explore" {% if not selected_category %}aria-current="page"{% endif %}><span class="shortcut-icon"><i class="fa-solid fa-border-all" aria-hidden="true"></i></span><span>All services</span></a>
+          {% for cat in categories %}
+            <a class="category-shortcut category-{{ cat|category_theme }} {% if selected_category|lower == cat|lower %}is-selected{% endif %}" href="{% url 'dashboard' %}?category={{ cat|urlencode }}#explore" {% if selected_category|lower == cat|lower %}aria-current="page"{% endif %}><span class="shortcut-icon"><i class="fa-solid {{ cat|category_icon }}" aria-hidden="true"></i></span><span>{{ cat }}</span></a>
+          {% endfor %}
+        </nav>
+      {% endif %}
+      <form action="{% url 'dashboard' %}#explore" method="get" class="search-panel"><div class="search-input-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="form-control" name="q" placeholder="Search plumbing, cleaning, repairs..." value="{{ query }}" aria-label="Search services"></div><div class="search-select-wrap"><i class="fa-solid fa-filter"></i><select class="form-select" name="category" aria-label="Select category"><option value="">All categories</option>{% for cat in categories %}<option value="{{ cat }}" {% if selected_category == cat %}selected{% endif %}>{{ cat }}</option>{% endfor %}</select></div><button class="btn btn-primary" type="submit">Find services <i class="fa-solid fa-arrow-right ms-2"></i></button></form>
+    {% endif %}
+    <div class="row g-4">
+      {% if profile.role == 'provider' %}
+        {% for service in my_services %}
+          <div class="col-md-6 col-xl-4"><article class="service-card h-100"><div class="service-card-art category-art category-{{ service.category|category_theme }}"><span class="art-shape art-shape-one" aria-hidden="true"></span><span class="art-shape art-shape-two" aria-hidden="true"></span><span class="service-art-icon"><i class="fa-solid {{ service.category|category_icon }}" aria-hidden="true"></i></span><span class="art-sparkle" aria-hidden="true"><i class="fa-solid fa-sparkles"></i></span><span class="art-chip">Your listing</span></div><div class="service-card-body"><span class="category-chip">{{ service.category }}</span><h3>{{ service.title }}</h3><p>{{ service.description|truncatewords:22 }}</p><div class="service-card-meta"><strong>₹{{ service.price }}</strong><span>Per service</span></div><div class="service-card-actions"><a href="{% url 'service_detail' service.id %}" class="btn btn-outline-primary btn-sm flex-grow-1">View details</a><a href="{% url 'edit_service' service.id %}" class="btn btn-primary btn-sm" title="Edit service"><i class="fa-solid fa-pen me-1"></i>Edit</a><a href="{% url 'delete_service' service.id %}" class="btn btn-outline-danger btn-sm" title="Delete service"><i class="fa-regular fa-trash-can"></i></a></div></div></article></div>
+        {% empty %}
+          <div class="col-12"><div class="empty-state empty-card"><span><i class="fa-solid fa-briefcase"></i></span><h3>No services listed</h3><p>Create your first service and start receiving bookings.</p><a href="{% url 'add_service' %}" class="btn btn-primary">Add your first service</a></div></div>
+        {% endfor %}
+      {% else %}
+        {% for service in services %}
+          <div class="col-md-6 col-xl-4"><article class="service-card h-100"><div class="service-card-art category-art category-{{ service.category|category_theme }}"><span class="art-shape art-shape-one" aria-hidden="true"></span><span class="art-shape art-shape-two" aria-hidden="true"></span><span class="service-art-icon"><i class="fa-solid {{ service.category|category_icon }}" aria-hidden="true"></i></span><span class="art-sparkle" aria-hidden="true"><i class="fa-solid fa-sparkles"></i></span><span class="art-chip"><i class="fa-solid fa-circle-check me-1"></i> Available</span></div><div class="service-card-body"><span class="category-chip">{{ service.category }}</span><h3>{{ service.title }}</h3><p>{{ service.description|truncatewords:22 }}</p><div class="provider-line"><i class="fa-regular fa-user me-2"></i>By {{ service.provider.username }}</div><div class="service-card-meta"><strong>₹{{ service.price }}</strong><span>Starting price</span></div><div class="service-card-actions"><a href="{% url 'book_service' service.id %}" class="btn btn-primary flex-grow-1">Book now <i class="fa-solid fa-arrow-right ms-1"></i></a><a href="{% url 'service_detail' service.id %}" class="btn btn-outline-primary" title="View details" aria-label="View details"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></div></article></div>
+        {% empty %}
+          <div class="col-12"><div class="empty-state empty-card"><span><i class="fa-solid fa-magnifying-glass"></i></span><h3>No matching services</h3><p>Try a different search or browse all categories.</p><a href="{% url 'dashboard' %}#explore" class="btn btn-outline-primary">Clear filters</a></div></div>
+        {% endfor %}
+      {% endif %}
+    </div>
+  </section>
+
+  <aside class="help-strip"><div class="help-strip-icon"><i class="fa-solid fa-headset"></i></div><div><h3>Need a helping hand?</h3><p>Our assistant is here to answer questions about home services and bookings.</p></div><button type="button" class="btn btn-light" onclick="document.getElementById('chatToggle')?.click()">Ask the assistant <i class="fa-solid fa-arrow-right ms-2"></i></button></aside>
+</div>
+{% endblock %}

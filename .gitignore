@@ -1,0 +1,26 @@
+# Local secrets and data (NEVER push to a public repository)
+.env
+.env.*
+!.env.example
+*.sqlite3
+*.sqlite3-journal
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Generated assets and caches
+staticfiles/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local files
+*.log
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

@@ -1,0 +1,181 @@
+{% load static %}
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="ServiGo — trusted home services, simpler bookings.">
+  <title>{% block title %}ServiGo | Home services made easy{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'marketplace/style.css' %}">
+  <link rel="stylesheet" href="{% static 'marketplace/motion.css' %}">
+  <link rel="stylesheet" href="{% static 'marketplace/visuals.css' %}">
+  <script defer src="{% static 'marketplace/motion.js' %}"></script>
+  <script>
+    try { document.documentElement.setAttribute('data-bs-theme', localStorage.getItem('servigo-theme') || 'light'); } catch (_) {}
+  </script>
+</head>
+<body>
+  <div class="sg-scroll-progress" id="sgScrollProgress" aria-hidden="true"></div>
+  <nav class="navbar navbar-expand-lg site-navbar sticky-top">
+    <div class="container container-wide">
+      <a class="navbar-brand brand-lockup" href="{% url 'dashboard' %}">
+        <span class="brand-icon"><i class="fa-solid fa-house-chimney"></i></span>
+        <span>servi<span class="brand-accent">go</span><small class="brand-dot">.</small></span>
+      </a>
+      <button class="navbar-toggler nav-menu-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#siteNav" aria-controls="siteNav" aria-expanded="false" aria-label="Toggle menu"><span class="navbar-toggler-icon"></span></button>
+      <div class="collapse navbar-collapse" id="siteNav">
+        <ul class="navbar-nav mx-auto gap-lg-3 align-items-lg-center">
+          {% if user.is_authenticated %}
+            <li class="nav-item"><a class="nav-link" href="{% url 'dashboard' %}"><i class="fa-solid fa-table-cells-large me-2"></i>Dashboard</a></li>
+            {% if user.userprofile.role == 'provider' %}
+              <li class="nav-item"><a class="nav-link" href="{% url 'add_service' %}"><i class="fa-solid fa-plus me-2"></i>Add service</a></li>
+            {% else %}
+              <li class="nav-item"><a class="nav-link" href="{% url 'dashboard' %}#explore"><i class="fa-solid fa-compass me-2"></i>Explore services</a></li>
+            {% endif %}
+          {% endif %}
+          <li class="nav-item"><a class="nav-link" href="{% url 'about' %}"><i class="fa-regular fa-circle-question me-2"></i>About us</a></li>
+        </ul>
+        <div class="nav-actions d-flex align-items-center gap-2 mt-3 mt-lg-0">
+          <button type="button" id="themeToggle" class="btn theme-toggle" aria-label="Toggle dark mode" title="Toggle light or dark theme"><i class="fa-solid fa-moon"></i></button>
+          {% if user.is_authenticated %}
+            <a class="profile-chip" href="{% url 'profile' %}"><span class="avatar">{{ user.username|first|upper }}</span><span class="d-none d-sm-inline">{{ user.username|truncatechars:16 }}</span></a>
+            <form method="post" action="{% url 'logout' %}" class="mb-0">{% csrf_token %}<button class="btn btn-outline-primary btn-sm nav-logout" type="submit">Log out</button></form>
+          {% else %}
+            <a href="{% url 'login' %}" class="btn btn-link nav-login">Log in</a>
+            <a href="{% url 'register' %}" class="btn btn-primary btn-sm">Get started <i class="fa-solid fa-arrow-up-right-from-square ms-1"></i></a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="site-main">
+    {% if messages %}
+      <div class="container container-wide mt-4" aria-live="polite">
+        {% for message in messages %}
+          <div class="alert alert-{% if message.tags == 'error' %}danger{% elif message.tags == 'success' %}success{% elif message.tags == 'warning' %}warning{% else %}info{% endif %} alert-dismissible fade show notification" role="alert">
+            <i class="fa-solid fa-circle-info me-2"></i>{{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <button class="sg-back-top" id="sgBackTop" type="button" aria-label="Back to top" title="Back to top"><i class="fa-solid fa-arrow-up" aria-hidden="true"></i></button>
+
+  <footer class="site-footer">
+    <div class="container container-wide">
+      <div class="row g-4 align-items-start">
+        <div class="col-lg-5">
+          <a class="brand-lockup footer-brand" href="{% url 'dashboard' %}"><span class="brand-icon"><i class="fa-solid fa-house-chimney"></i></span><span>servi<span class="brand-accent">go</span><small class="brand-dot">.</small></span></a>
+          <p class="mt-3 mb-0 footer-copy">A better way to find trusted help and get things done around your home.</p>
+        </div>
+        <div class="col-6 col-lg-3"><h6>Discover</h6><a href="{% url 'dashboard' %}">Dashboard</a><a href="{% url 'about' %}">About ServiGo</a></div>
+        <div class="col-6 col-lg-3"><h6>Your account</h6>{% if user.is_authenticated %}<a href="{% url 'profile' %}">My profile</a>{% else %}<a href="{% url 'login' %}">Sign in</a><a href="{% url 'register' %}">Create account</a>{% endif %}</div>
+      </div>
+      <div class="footer-bottom">© 2026 ServiGo. Made for easier everyday living. <span>Home is where we help.</span></div>
+    </div>
+  </footer>
+
+  {% if user.is_authenticated %}
+  <div class="chat-container" id="chatWidget">
+    <div class="chat-panel" id="chatPanel" hidden>
+      <div class="chat-header"><div class="d-flex align-items-center gap-2"><span class="chat-avatar"><i class="fa-solid fa-sparkles"></i></span><div><strong>ServiGo Assistant</strong><small>AI when configured · helpful guide otherwise</small></div></div><button class="chat-close" type="button" id="chatClose" aria-label="Close chat"><i class="fa-solid fa-xmark"></i></button></div>
+      <div class="chat-mode" id="chatMode" role="status">Home service help</div><div class="chat-messages" id="chatMessages" aria-live="polite"><div class="chat-bubble bot">Hi there! 👋 How can I help with your home services today?</div></div>
+      <form class="chat-compose" id="chatForm"><input type="text" class="form-control" id="chatInput" autocomplete="off" maxlength="1500" placeholder="Type your message..." aria-label="Chat message"><button type="submit" class="btn btn-primary" aria-label="Send message"><i class="fa-solid fa-arrow-up"></i></button></form>
+    </div>
+    <button class="chat-fab" id="chatToggle" type="button" aria-label="Open AI assistant" aria-expanded="false"><i class="fa-regular fa-comment-dots"></i></button>
+  </div>
+  {% endif %}
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    (function () {
+      const themeButton = document.getElementById('themeToggle');
+      function updateThemeIcon() {
+        const dark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+        themeButton.innerHTML = dark ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+        themeButton.setAttribute('aria-label', dark ? 'Switch to light mode' : 'Switch to dark mode');
+      }
+      updateThemeIcon();
+      themeButton.addEventListener('click', () => {
+        const next = document.documentElement.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-bs-theme', next);
+        try { localStorage.setItem('servigo-theme', next); } catch (_) {}
+        updateThemeIcon();
+      });
+
+      const toggle = document.getElementById('chatToggle');
+      if (!toggle) return;
+      const panel = document.getElementById('chatPanel');
+      const messages = document.getElementById('chatMessages');
+      const input = document.getElementById('chatInput');
+      const form = document.getElementById('chatForm');
+      const close = document.getElementById('chatClose');
+      const chatMode = document.getElementById('chatMode');
+      function openChat(open) {
+        panel.hidden = !open;
+        toggle.setAttribute('aria-expanded', String(open));
+        if (open) input.focus();
+      }
+      toggle.addEventListener('click', () => openChat(panel.hidden));
+      close.addEventListener('click', () => openChat(false));
+      function appendMessage(text, who) {
+        const bubble = document.createElement('div');
+        bubble.className = 'chat-bubble ' + who;
+        bubble.textContent = text; // no HTML injection from messages or model replies
+        messages.appendChild(bubble);
+        messages.scrollTop = messages.scrollHeight;
+        return bubble;
+      }
+      function getCookie(name) {
+        const part = document.cookie.split('; ').find(x => x.startsWith(name + '='));
+        return part ? decodeURIComponent(part.substring(name.length + 1)) : '';
+      }
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const message = input.value.trim();
+        if (!message) return;
+        appendMessage(message, 'user');
+        input.value = '';
+        const loading = appendMessage('', 'bot');
+        loading.classList.add('sg-chat-loading');
+        const sr = document.createElement('span');
+        sr.className = 'visually-hidden';
+        sr.textContent = 'Thinking';
+        const dots = document.createElement('span');
+        dots.className = 'sg-typing-dots';
+        dots.setAttribute('aria-hidden', 'true');
+        for (let i = 0; i < 3; i++) dots.appendChild(document.createElement('span'));
+        loading.append(sr, dots);
+        const submit = form.querySelector('button');
+        submit.disabled = true;
+        try {
+          const response = await fetch('{% url "ai_chat_api" %}', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
+            body: JSON.stringify({message})
+          });
+          const data = await response.json();
+          loading.classList.remove('sg-chat-loading');
+          loading.textContent = data.reply || data.error || 'Sorry, something went wrong.';
+          if (response.ok && chatMode) {
+            chatMode.textContent = data.mode === 'ai'
+              ? 'AI-powered answer'
+              : (data.ai_configured ? 'AI temporarily unavailable · standard guide' : 'AI key not configured · standard guide');
+          }
+        } catch (_) { loading.classList.remove('sg-chat-loading'); loading.textContent = 'Connection error. Please try again.'; }
+        finally { submit.disabled = false; messages.scrollTop = messages.scrollHeight; }
+      });
+    })();
+  </script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,23 @@
+{% extends 'marketplace/base.html' %}
+{% block title %}{% if is_edit %}Edit service{% else %}New service{% endif %} | ServiGo{% endblock %}
+{% block content %}
+<div class="container container-wide form-page">
+  <a href="{% url 'dashboard' %}#explore" class="back-link"><i class="fa-solid fa-arrow-left me-2"></i>Back to dashboard</a>
+  <div class="row g-4 align-items-start justify-content-center">
+    <div class="col-lg-7">
+      <div class="form-shell">
+        <span class="section-kicker">PROVIDER STUDIO</span>
+        <h1>{% if is_edit %}Edit your service{% else %}Create a new service{% endif %}</h1>
+        <p class="form-subtitle">{% if is_edit %}Update your listing and keep customers informed.{% else %}Tell customers about the amazing work you do.{% endif %}</p>
+        <form method="post" novalidate>
+          {% csrf_token %}
+          {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+          {% for field in form %}<div class="form-field"><label class="form-label" for="{{ field.id_for_label }}">{{ field.label }} {% if field.field.required %}<span class="text-danger">*</span>{% endif %}</label>{{ field }}{% for error in field.errors %}<div class="field-error">{{ error }}</div>{% endfor %}{% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}</div>{% endfor %}
+          <div class="form-buttons"><button type="submit" class="btn btn-primary btn-lg">{% if is_edit %}<i class="fa-solid fa-check me-2"></i>Save changes{% else %}<i class="fa-solid fa-plus me-2"></i>Publish service{% endif %}</button><a href="{% url 'dashboard' %}#explore" class="btn btn-outline-secondary btn-lg">Cancel</a></div>
+        </form>
+      </div>
+    </div>
+    <div class="col-lg-4"><div class="side-tip"><span class="tip-icon"><i class="fa-regular fa-lightbulb"></i></span><h3>Make your service stand out</h3><p>A clear title, helpful description, and transparent price build trust and encourage bookings.</p><div class="tip-line"><i class="fa-solid fa-circle-check"></i> Explain what is included</div><div class="tip-line"><i class="fa-solid fa-circle-check"></i> Use a simple service category</div><div class="tip-line"><i class="fa-solid fa-circle-check"></i> Keep your pricing up to date</div></div></div>
+  </div>
+</div>
+{% endblock %}

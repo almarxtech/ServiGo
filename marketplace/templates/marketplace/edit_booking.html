@@ -1,0 +1,15 @@
+{% extends 'marketplace/base.html' %}
+{% block title %}Edit booking | ServiGo{% endblock %}
+{% block content %}
+<div class="container container-wide form-page">
+  <a href="{% url 'dashboard' %}#my-bookings" class="back-link"><i class="fa-solid fa-arrow-left me-2"></i>Back to bookings</a>
+  <div class="row justify-content-center"><div class="col-lg-7">
+    <div class="form-shell"><span class="section-kicker">BOOKING #BK-{{ booking.pk }}</span><h1>Edit my booking</h1><p class="form-subtitle">Change your appointment date and describe your requirements. If your booking was already accepted, the new request will be sent to the provider for approval again.</p>
+      <div class="booking-summary"><span class="booking-summary-icon"><i class="fa-regular fa-calendar-check"></i></span><div><span class="category-chip">{{ booking.service.category }}</span><h3>{{ booking.service.title }}</h3><p>Your appointment with {{ booking.service.provider.username }}</p></div><span class="status-pill status-{{ booking.status|lower }}">{{ booking.status }}</span></div>
+      <form method="post" novalidate>{% csrf_token %}{% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}{% for field in form %}<div class="form-field"><label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<div class="field-error">{{ error }}</div>{% endfor %}</div>{% endfor %}
+        <div class="booking-inline-hint"><i class="fa-solid fa-circle-info me-2"></i>Accepted bookings return to <strong>Pending</strong> after an edit.</div><div class="form-buttons"><button class="btn btn-primary btn-lg" type="submit"><i class="fa-solid fa-check me-2"></i>Save booking</button><a class="btn btn-outline-secondary btn-lg" href="{% url 'dashboard' %}#my-bookings">Cancel</a></div>
+      </form>
+    </div>
+  </div></div>
+</div>
+{% endblock %}

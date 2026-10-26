@@ -1,0 +1,164 @@
+/* ServiGo Motion & Polish — progressive enhancement. No dependency on an API or plugin. */
+:root {
+  --sg-motion-ease: cubic-bezier(.22, 1, .36, 1);
+  --sg-motion-fast: 220ms;
+}
+
+/* Small, unobtrusive visual indication of reading/scroll position. */
+.sg-scroll-progress {
+  position: fixed;
+  inset: 0 auto auto 0;
+  width: 100%;
+  height: 3px;
+  z-index: 1100;
+  pointer-events: none;
+  transform: scaleX(0);
+  transform-origin: left center;
+  background: linear-gradient(90deg, #1562db 5%, #27ccbe 75%, #74d8ff);
+  box-shadow: 0 0 11px rgba(37, 185, 211, .3);
+}
+
+/* An optional return-to-top control; positioned away from the chat launcher. */
+.sg-back-top {
+  position: fixed;
+  left: 23px;
+  bottom: 24px;
+  z-index: 1010;
+  display: grid;
+  place-items: center;
+  width: 45px;
+  height: 45px;
+  border: 1px solid var(--sg-border);
+  border-radius: 15px;
+  background: var(--sg-surface);
+  color: var(--sg-primary);
+  box-shadow: 0 12px 28px rgba(27, 66, 110, .15);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(12px);
+  pointer-events: none;
+  transition: opacity .28s ease, transform .28s var(--sg-motion-ease), visibility .28s ease;
+}
+.sg-back-top.sg-show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.sg-back-top:hover { background: var(--sg-primary); color: white; transform: translateY(-3px); }
+
+/* Hero: a lightweight glow and gentle floating elements (transform/opacity only). */
+.dashboard-hero::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  width: 420px;
+  height: 420px;
+  right: -140px;
+  bottom: -250px;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(148, 253, 246, .25), transparent 67%);
+  animation: sg-glow-drift 14s ease-in-out infinite alternate;
+}
+.hero-visual .orbit-one { animation: sg-orbit 32s linear infinite; }
+.hero-visual .orbit-two { animation: sg-orbit 38s linear infinite reverse; }
+.hero-visual .hero-house { animation: sg-house-float 6.5s ease-in-out infinite; }
+.hero-visual .float-tile-top { animation: sg-tile-top 6s ease-in-out infinite; }
+.hero-visual .float-tile-bottom { animation: sg-tile-bottom 7s ease-in-out infinite .5s; }
+
+/* Buttons, links, and cards have tactile but modest feedback. */
+.site-navbar { transition: box-shadow 240ms ease, border-color 240ms ease; }
+.site-navbar.sg-scrolled { box-shadow: 0 12px 26px rgba(24, 59, 108, .085); }
+.site-navbar .nav-link { transition: color 200ms ease, transform 200ms ease; }
+.site-navbar .nav-link:hover { transform: translateY(-1px); }
+.site-navbar .brand-icon { transition: transform 320ms var(--sg-motion-ease), box-shadow 320ms ease; }
+.site-navbar .brand-lockup:hover .brand-icon { transform: rotate(-9deg) scale(1.08); box-shadow: 0 7px 15px rgba(22, 94, 196, .2); }
+.theme-toggle i { transition: transform 240ms var(--sg-motion-ease); }
+.theme-toggle:hover i { transform: rotate(-15deg) scale(1.1); }
+.btn:not(:disabled) { transition: transform 190ms ease, box-shadow 190ms ease, background-color 190ms ease, border-color 190ms ease, color 190ms ease; }
+.btn:not(:disabled):hover { transform: translateY(-2px); }
+.btn:not(:disabled):active { transform: translateY(0) scale(.985); }
+.btn-primary:not(:disabled):hover { box-shadow: 0 10px 21px rgba(19, 96, 210, .23); }
+.service-card { transition: transform 340ms var(--sg-motion-ease), box-shadow 340ms ease, border-color 340ms ease; }
+.service-card:hover { transform: translateY(-7px); border-color: rgba(54, 139, 222, .38); }
+.service-art-icon { transition: transform 420ms var(--sg-motion-ease); }
+.service-card:hover .service-art-icon { transform: translateY(-4px) scale(1.11) rotate(-5deg); }
+.stat-card { transition: transform 300ms var(--sg-motion-ease), box-shadow 300ms ease, border-color 300ms ease; }
+.stat-card:hover { transform: translateY(-4px); box-shadow: 0 15px 36px rgba(36, 64, 104, .10); border-color: rgba(63, 149, 222, .28); }
+.stat-card .stat-icon { transition: transform 340ms var(--sg-motion-ease); }
+.stat-card:hover .stat-icon { transform: rotate(-7deg) scale(1.07); }
+
+.booking-table tbody tr { transition: background-color 200ms ease; }
+.booking-table tbody tr:hover { --bs-table-bg: var(--sg-soft); }
+.booking-table tbody tr:hover .table-service-icon { transform: scale(1.07); }
+.table-service-icon { transition: transform 250ms var(--sg-motion-ease); }
+.search-panel, .form-shell, .booking-table-wrap, .review-card {
+  transition: box-shadow 250ms ease, border-color 250ms ease;
+}
+.search-panel:focus-within, .form-shell:focus-within { border-color: rgba(55, 130, 225, .38); box-shadow: 0 12px 38px rgba(35, 91, 166, .09); }
+.status-pending .status-dot { animation: sg-status-breathe 2.6s ease-in-out infinite; }
+.help-strip-icon { animation: sg-headset 4s ease-in-out infinite; }
+
+/* Only JS-managed items can be hidden; without JS the page remains readable. */
+.sg-motion-on .sg-reveal {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity 650ms var(--sg-motion-ease), transform 650ms var(--sg-motion-ease);
+  transition-delay: var(--sg-delay, 0ms);
+}
+.sg-motion-on .sg-reveal.sg-visible { opacity: 1; transform: translateY(0); }
+.sg-motion-on .dashboard-hero { animation: sg-page-entrance 700ms var(--sg-motion-ease) both; }
+
+/* Chat panel and chat bubbles. Nothing flashes while the panel is closed. */
+.chat-panel:not([hidden]) { animation: sg-chat-open 310ms var(--sg-motion-ease) both; transform-origin: right bottom; }
+.chat-bubble { animation: sg-message-appear 210ms ease-out both; }
+.sg-chat-loading { display: inline-flex; align-items: center; min-height: 40px; }
+.sg-typing-dots { display: inline-flex; align-items: center; gap: 5px; height: 12px; }
+.sg-typing-dots span {
+  display: block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--sg-primary);
+  animation: sg-typing 1.1s ease-in-out infinite;
+}
+.sg-typing-dots span:nth-child(2) { animation-delay: .15s; }
+.sg-typing-dots span:nth-child(3) { animation-delay: .30s; }
+.notification { animation: sg-notice-in 350ms var(--sg-motion-ease) both; }
+
+@keyframes sg-page-entrance { from { opacity: .65; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes sg-glow-drift { from { transform: translate(-25px,-12px) scale(.9); opacity: .65; } to { transform: translate(22px,15px) scale(1.12); opacity: 1; } }
+@keyframes sg-orbit { to { transform: rotate(360deg); } }
+@keyframes sg-house-float { 0%, 100% { transform: rotate(-7deg) translateY(0); } 50% { transform: rotate(-7deg) translateY(-10px); } }
+@keyframes sg-tile-top { 0%, 100% { transform: rotate(5deg) translateY(0); } 50% { transform: rotate(3deg) translateY(-9px); } }
+@keyframes sg-tile-bottom { 0%, 100% { transform: rotate(-5deg) translateY(0); } 50% { transform: rotate(-3deg) translateY(8px); } }
+@keyframes sg-status-breathe { 50% { opacity: .4; transform: scale(.8); } }
+@keyframes sg-headset { 0%, 100% { transform: rotate(0); } 45% { transform: rotate(-6deg); } 55% { transform: rotate(5deg); } }
+@keyframes sg-chat-open { from { opacity: 0; transform: translateY(14px) scale(.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes sg-message-appear { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes sg-typing { 0%, 60%, 100% { transform: translateY(0); opacity: .38; } 30% { transform: translateY(-4px); opacity: 1; } }
+@keyframes sg-notice-in { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+@media (max-width: 650px) {
+  .sg-back-top { left: 14px; bottom: 15px; width: 41px; height: 41px; }
+  .service-card:hover, .stat-card:hover, .btn:not(:disabled):hover { transform: none; }
+  .hero-visual .orbit-one, .hero-visual .orbit-two { animation: none; }
+}
+
+/* Honor operating-system accessibility preference and never hide content. */
+@media (prefers-reduced-motion: reduce) {
+  .sg-motion-on .sg-reveal, .sg-motion-on .sg-reveal.sg-visible {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  .dashboard-hero::after, .hero-visual *, .status-pending .status-dot,
+  .help-strip-icon, .chat-panel:not([hidden]), .chat-bubble,
+  .sg-typing-dots span, .notification, .sg-motion-on .dashboard-hero {
+    animation: none !important;
+  }
+  .service-card:hover, .stat-card:hover, .btn:not(:disabled):hover,
+  .sg-back-top:hover { transform: none !important; }
+  .sg-back-top { transition: none !important; }
+}

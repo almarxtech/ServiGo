@@ -1,0 +1,10 @@
+{% extends 'marketplace/base.html' %}
+{% block title %}About ServiGo{% endblock %}
+{% block content %}
+<div class="container container-wide form-page">
+  <section class="dashboard-hero about-hero"><div class="row align-items-center"><div class="col-lg-8"><span class="eyebrow"><span class="pulse-dot"></span> OUR STORY</span><h1>Home help, <span>made human.</span></h1><p>ServiGo brings homeowners and skilled local service providers together for a simpler, clearer and more convenient way to care for every home.</p><a href="{% url 'dashboard' %}" class="btn btn-light btn-lg mt-3">Explore ServiGo <i class="fa-solid fa-arrow-right ms-2"></i></a></div></div></section>
+  <section class="dashboard-section mt-5"><div class="section-topline"><div><span class="section-kicker">WHY SERVIGO</span><h2>More ease. Less hassle.</h2><p>Designed to keep every step simple, from finding a service to managing an appointment.</p></div></div>
+    <div class="row g-4"><div class="col-lg-4"><div class="side-tip h-100"><span class="tip-icon"><i class="fa-solid fa-screwdriver-wrench"></i></span><h3>Convenient service listings</h3><p>Browse descriptions, categories and pricing in one place, then pick the service that fits your needs.</p></div></div><div class="col-lg-4"><div class="side-tip h-100"><span class="tip-icon"><i class="fa-regular fa-calendar-check"></i></span><h3>Bookings in your hands</h3><p>Schedule, reschedule, and manage service appointments without juggling calls or paperwork.</p></div></div><div class="col-lg-4"><div class="side-tip h-100"><span class="tip-icon"><i class="fa-solid fa-people-group"></i></span><h3>For customers and providers</h3><p>Service professionals can manage listings and requests while customers stay on top of their home projects.</p></div></div></div>
+  </section>
+</div>
+{% endblock %}
