@@ -54,7 +54,11 @@ def register_view(request):
             phone_number=form.cleaned_data['phone_number'],
             address=form.cleaned_data['address'],
         )
-        login(request, user)
+        login(
+            request,
+            user,
+            backend="django.contrib.auth.backends.ModelBackend"
+        )
         messages.success(request, 'Your ServiGo account is ready. Welcome!')
         return redirect('dashboard')
     return render(request, 'marketplace/register.html', {'form': form})
