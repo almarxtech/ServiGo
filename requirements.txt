@@ -3,3 +3,4 @@ djangorestframework==3.18.3
 django-allauth==65.20.1
 python-decouple==3.8
 huggingface-hub==2.2.0
+requests>=2.32,<3
