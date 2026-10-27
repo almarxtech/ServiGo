@@ -43,6 +43,8 @@ class Booking(models.Model):
     service = models.ForeignKey(Service, on_delete=models.CASCADE)
     booking_date = models.DateTimeField()
     problem_description = models.TextField(blank=True, default='')
+    # Makes repeat submissions of the booking form idempotent. Legacy bookings may be NULL.
+    submission_key = models.UUIDField(null=True, blank=True, unique=True, editable=False)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
     created_at = models.DateTimeField(auto_now_add=True)
 

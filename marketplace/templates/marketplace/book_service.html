@@ -17,6 +17,8 @@
         </div>
         <form method="post" novalidate id="bookingForm">
           {% csrf_token %}
+          <input type="hidden" name="booking_token" value="{{ booking_token }}">
+          {% if booking_error %}<div class="alert alert-danger" role="alert">{{ booking_error }}</div>{% endif %}
           {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
           {% for field in form %}
           <div class="form-field"><label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>{{ field }}
@@ -24,10 +26,16 @@
           </div>
           {% endfor %}
           <p class="form-help"><i class="fa-regular fa-clock me-2"></i>Appointments must be in the future. Writing a detailed issue description improves your guidance and helps your provider prepare.</p>
-          <div class="form-buttons booking-form-buttons">
-            <button type="submit" name="action" value="book" class="btn btn-primary btn-lg">Confirm booking <i class="fa-solid fa-arrow-right ms-2"></i></button>
-            <button type="submit" name="action" value="estimate" formnovalidate class="btn btn-outline-primary btn-lg"><i class="fa-solid fa-wand-magic-sparkles me-2"></i>Get cost estimate</button>
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" name="pay_before_approval_ack" value="yes" id="pay-before-approval-ack">
+            <label class="form-check-label" for="pay-before-approval-ack">I understand that paying now does not confirm provider acceptance, and refunds after rejection or cancellation require admin assistance.</label>
           </div>
+          <div class="form-buttons booking-form-buttons">
+            <button type="submit" name="action" value="book_pay" class="btn btn-primary btn-lg" {% if not gateway_enabled %}disabled title="Razorpay keys are not configured"{% endif %}><i class="fa-solid fa-credit-card me-2"></i>Book &amp; Pay Now</button>
+            <button type="submit" name="action" value="book" class="btn btn-outline-primary btn-lg">Book &amp; Pay Later</button>
+            <button type="submit" name="action" value="estimate" formnovalidate class="btn btn-outline-secondary btn-lg"><i class="fa-solid fa-wand-magic-sparkles me-2"></i>Get cost estimate</button>
+          </div>
+          <p class="form-help mt-3"><i class="fa-solid fa-shield-halved me-1"></i>Pay Now opens Razorpay for ₹{{ service.price }} as an <strong>advance based on the listed starting price</strong>; the final service quote can differ. Your booking stays <strong>Pending</strong> until the provider accepts. {% if gateway_test_mode %}<strong>Razorpay TEST MODE: no real money is transferred.</strong>{% else %}If your provider rejects or you cancel a paid booking, refunds require admin assistance and are not automatic.{% endif %}{% if not gateway_enabled %} Online payment is disabled until Razorpay keys are configured.{% endif %}</p>
         </form>
       </div>
     </div>

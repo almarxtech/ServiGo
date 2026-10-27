@@ -120,13 +120,17 @@ class ServiGoManagementTests(TestCase):
         complaint.refresh_from_db()
         self.assertEqual(complaint.status, 'Open')
 
-    def test_advance_only_after_acceptance(self):
+    def test_advance_available_for_pending_booking_before_acceptance(self):
         self.booking.status = 'Pending'
         self.booking.save(update_fields=['status'])
         self.client.force_login(self.customer)
-        self.assertEqual(self.client.get(reverse('advance_payment', args=[self.booking.pk])).status_code, 403)
-        self.assertEqual(self.client.post(reverse('advance_payment', args=[self.booking.pk]), self.advance_data()).status_code, 403)
-        self.assertFalse(AdvancePayment.objects.exists())
+        url = reverse('advance_payment', args=[self.booking.pk])
+        self.assertContains(self.client.get(url), 'Awaiting provider approval')
+        self.assertRedirects(self.client.post(url, self.advance_data()), reverse('dashboard'))
+        payment = AdvancePayment.objects.get(booking=self.booking)
+        self.assertEqual(payment.status, 'Submitted')
+        self.booking.refresh_from_db()
+        self.assertEqual(self.booking.status, 'Pending')
 
     def test_advance_only_own_customer_booking(self):
         url = reverse('advance_payment', args=[self.booking.pk])

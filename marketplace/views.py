@@ -1,4 +1,5 @@
 import json
+import uuid
 
 from django.conf import settings
 from django.contrib import messages
@@ -8,11 +9,13 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.core.exceptions import PermissionDenied
 from django.core.mail import send_mail
 from django.db.models import Q
+from django.db import transaction, IntegrityError
 from django.http import HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
 from .forms import BookingDateForm, ServiceForm, UserRegistrationForm
+from . import payment_gateway as gateway
 from .models import AdvancePayment, Booking, Review, Service, UserProfile
 from .ai_services import (AIUnavailable, configured_provider, fallback_chat_reply,
                           generate_text, get_ai_cost_estimate)
@@ -33,7 +36,10 @@ def _notify_booking(booking):
             subject=f'Booking update: {booking.service.title}',
             message=(f'Hello {booking.customer.username},\n\nYour booking for '
                      f'{booking.service.title} is {booking.status}.\n'
-                     f'Scheduled for: {booking.booking_date:%d %b %Y, %I:%M %p}.'),
+                     f'Scheduled for: {booking.booking_date:%d %b %Y, %I:%M %p}.'
+                     + ('\nIf you paid an advance, refunds are not automatic. Please contact ServiGo admin.'
+                        if booking.status == 'Cancelled' and AdvancePayment.objects.filter(
+                            booking=booking, status__in=['Verified', 'Gateway Paid']).exists() else '')),
             from_email='noreply@servigo.local',
             recipient_list=[booking.customer.email],
             fail_silently=True,
@@ -167,23 +173,82 @@ def book_service_view(request, service_id):
     form = BookingDateForm(request.POST or None)
     ai_estimate = None
     estimate_error = None
+    booking_error = None
+    # UUID is also checked against the customer/service before handling a replay.
+    raw_token = request.POST.get('booking_token', '') if request.method == 'POST' else ''
+    try:
+        submission_key = uuid.UUID(raw_token) if raw_token else uuid.uuid4()
+    except (ValueError, AttributeError):
+        return HttpResponseBadRequest('Invalid booking request. Reload the form and try again.')
+
     if request.method == 'POST':
-        if request.POST.get('action') == 'estimate':
+        action = request.POST.get('action')
+        if action == 'estimate':
             try:
                 ai_estimate = get_ai_cost_estimate(request.POST.get('problem_description', ''), service)
             except ValueError as exc:
                 estimate_error = str(exc)
-        elif request.POST.get('action') == 'book' and form.is_valid():
-            booking = form.save(commit=False)
-            booking.service = service
-            booking.customer = request.user
-            booking.status = 'Pending'
-            booking.save()
-            messages.success(request, 'Booking requested! Manage it under My Bookings.')
-            return redirect('dashboard')
+        elif action in ('book', 'book_pay') and form.is_valid():
+            # Repeated submits (including double-clicks / back-and-refresh) must not
+            # create another booking or a second Razorpay order.
+            existing_booking = Booking.objects.filter(submission_key=submission_key).first()
+            if existing_booking:
+                if existing_booking.customer_id != request.user.pk or existing_booking.service_id != service.pk:
+                    return HttpResponseBadRequest('Booking request was already used.')
+                messages.info(request, 'This booking already exists; no duplicate was created.')
+                return redirect('advance_payment', booking_id=existing_booking.pk) if action == 'book_pay' and existing_booking.status in ('Pending', 'Accepted') else redirect('dashboard')
+
+            if action == 'book_pay' and request.POST.get('pay_before_approval_ack') != 'yes':
+                booking_error = 'Please acknowledge that provider approval is still pending and refunds are not automatic.'
+            elif action == 'book_pay' and not gateway.configured():
+                booking_error = 'Online checkout is not configured. Choose Book & Pay Later or ask the admin to enable Razorpay.'
+            elif action == 'book_pay' and service.price <= 0:
+                booking_error = 'This service does not have a valid payment amount.'
+            else:
+                try:
+                    # One atomic write for booking and its linked online order.
+                    # If Razorpay fails, no booking/payment is saved and the form
+                    # stays available for a safe retry. External orders are never
+                    # shown until the matching database record is committed.
+                    with transaction.atomic():
+                        booking = form.save(commit=False)
+                        booking.service = service
+                        booking.customer = request.user
+                        booking.status = 'Pending'
+                        booking.submission_key = submission_key
+                        booking.save()
+                        if action == 'book_pay':
+                            order_id = gateway.create_order(booking_id=booking.pk, amount=service.price)
+                            AdvancePayment.objects.create(
+                                booking=booking,
+                                amount=service.price,
+                                method='Razorpay',
+                                status='Awaiting Payment',
+                                gateway_order_id=order_id,
+                                gateway_mode='test' if gateway.is_test_mode() else 'live',
+                            )
+                except gateway.GatewayError:
+                    booking_error = 'Razorpay checkout could not be prepared. No booking or payment was created. Please retry or choose Pay Later.'
+                except IntegrityError:
+                    # A concurrent request might have committed the same UUID.
+                    previous = Booking.objects.filter(submission_key=submission_key,
+                                                      customer=request.user, service=service).first()
+                    if previous:
+                        messages.info(request, 'Booking already created. Duplicate request ignored.')
+                        return redirect('advance_payment', booking_id=previous.pk) if action == 'book_pay' and previous.status in ('Pending', 'Accepted') else redirect('dashboard')
+                    raise
+                else:
+                    if action == 'book_pay':
+                        messages.success(request, 'Booking requested! Complete the secure checkout now. Provider approval is still pending.')
+                        return redirect('advance_payment', booking_id=booking.pk)
+                    messages.success(request, 'Booking requested! You can pay now from My Bookings or wait until the provider accepts.')
+                    return redirect('dashboard')
+
     return render(request, 'marketplace/book_service.html', {
         'service': service, 'form': form, 'ai_estimate': ai_estimate,
         'estimate_error': estimate_error, 'ai_enabled': bool(configured_provider()),
+        'booking_token': str(submission_key), 'booking_error': booking_error,
+        'gateway_enabled': gateway.configured(), 'gateway_test_mode': gateway.is_test_mode(),
     })
 
 
@@ -242,7 +307,10 @@ def update_booking_status(request, booking_id, status):
     booking.status = status
     booking.save(update_fields=['status'])
     _notify_booking(booking)
-    messages.success(request, f'Booking marked as {status.lower()}.')
+    if status == 'Cancelled' and AdvancePayment.objects.filter(booking=booking, status__in=['Verified', 'Gateway Paid']).exists():
+        messages.warning(request, 'Booking cancelled, but an advance was paid. No refund was issued automatically; contact admin to arrange a refund.')
+    else:
+        messages.success(request, f'Booking marked as {status.lower()}.')
     return redirect('dashboard')
 
 

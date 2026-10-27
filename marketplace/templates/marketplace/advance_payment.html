@@ -3,8 +3,9 @@
 {% block content %}
 <div class="container container-wide management-page">
  <a class="back-link" href="{% url 'dashboard' %}#my-bookings"><i class="fa-solid fa-arrow-left me-2"></i>My bookings</a>
- <div class="management-heading"><div><span class="section-kicker">SECURE ADVANCE OPTIONS</span><h1>Advance for Booking #BK-{{ booking.pk }}</h1><p>Choose a payment method. Only the booking customer can pay; admin sees all payment records.</p></div><span class="management-heading-icon"><i class="fa-solid fa-credit-card"></i></span></div>
+ <div class="management-heading"><div><span class="section-kicker">SECURE ADVANCE OPTIONS</span><h1>Advance for Booking #BK-{{ booking.pk }}</h1><p>Choose a payment method while your booking is pending or accepted. Only the booking customer can pay; admin sees all payment records.</p></div><span class="management-heading-icon"><i class="fa-solid fa-credit-card"></i></span></div>
  <div class="booking-summary mb-4"><div><small>BOOKING #BK-{{ booking.pk }}</small><h3>{{ booking.service.title }}</h3><p>Provider: {{ booking.service.provider.username }} • {{ booking.booking_date|date:'d M Y, h:i A' }}</p></div><strong>₹{{ booking.service.price }}</strong></div>
+ {% if booking.status == 'Pending' %}<div class="alert alert-warning"><strong>Awaiting provider approval.</strong> You can pay when you book, but paying does not mean the appointment has been accepted. If your provider rejects the booking, contact admin about a refund; refunds are not automatic.</div>{% endif %}
  {% if existing %}<div class="alert alert-info">Current advance: <strong>{{ existing.get_status_display }}</strong>{% if existing.gateway_mode %} ({{ existing.gateway_mode|upper }} MODE){% endif %}. {% if existing.admin_note %}{{ existing.admin_note }}{% endif %}</div>{% endif %}
  <div class="row g-4">
   <div class="col-lg-6"><section class="management-panel h-100">
@@ -20,7 +21,7 @@
       <small class="text-muted">Maximum ₹{{ booking.service.price }}.</small></div>
      <button class="btn btn-primary w-100" type="submit" {% if existing.status == 'Submitted' %}disabled title="Manual transfer needs admin review first"{% endif %}>Start secure checkout</button>
      </form>
-     {% if checkout %}<div class="alert alert-success mt-3"><strong>Checkout is ready.</strong> Click below to choose UPI / card / netbanking.</div><button id="launch-razorpay" type="button" class="btn btn-success w-100">Open Razorpay checkout</button>
+     {% if checkout %}<div class="alert alert-success mt-3"><strong>Checkout is ready.</strong> Use the same secure order to choose UPI / card / netbanking. A page refresh will not create a second order.</div><button id="launch-razorpay" type="button" class="btn btn-success w-100">Open Razorpay checkout</button>
        <form id="razorpay-callback" action="{% url 'gateway_confirm' booking.pk %}" method="post" hidden>{% csrf_token %}<input name="razorpay_payment_id" id="razorpay_payment_id"><input name="razorpay_order_id" id="razorpay_order_id"><input name="razorpay_signature" id="razorpay_signature"></form>
      {% endif %}
    {% else %}<div class="alert alert-secondary"><strong>Gateway not configured.</strong> The admin can add Razorpay TEST keys in the server .env. Until then, use the manual request below.</div>{% endif %}
@@ -39,7 +40,7 @@
       <button class="btn btn-outline-primary w-100" type="submit">Submit for admin verification</button></form>{% endif %}
   </section></div>
  </div>
- <p class="text-muted small mt-3"><i class="fa-solid fa-shield-halved me-1"></i>Never enter card numbers, CVV, UPI PIN or OTP on ServiGo forms. Razorpay controls its own payment interface. Refunds are not automatic if a booking is cancelled.</p>
+ <p class="text-muted small mt-3"><i class="fa-solid fa-shield-halved me-1"></i>Never enter card numbers, CVV, UPI PIN or OTP on ServiGo forms. Razorpay controls its own payment interface. Refunds are not automatic if a booking is cancelled or rejected by the provider.</p>
 </div>
 {% if checkout %}
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>

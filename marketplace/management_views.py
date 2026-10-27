@@ -54,14 +54,19 @@ def advance_payment_view(request, booking_id):
         raise PermissionDenied('Only the booking customer may make an advance payment.')
     booking = get_object_or_404(Booking.objects.select_related('service', 'service__provider'),
                                 pk=booking_id, customer=request.user)
-    if booking.status != 'Accepted':
-        raise PermissionDenied('Advance payments are only available for accepted bookings.')
+    if booking.status not in ('Pending', 'Accepted'):
+        raise PermissionDenied('Payments are only available for pending or accepted bookings.')
     existing = AdvancePayment.objects.filter(booking=booking).first()
     if existing and existing.status in ('Verified', 'Gateway Paid'):
         messages.info(request, 'This advance has already been confirmed. Contact support for refunds or changes.')
         return redirect('dashboard')
 
-    checkout = None
+    # A booking-page Pay Now action already prepares its Razorpay order.
+    # Re-render the SAME stored order on GET so refresh never creates a new one.
+    checkout = (existing if existing and existing.status == 'Awaiting Payment'
+                and existing.gateway_order_id and gateway.configured()
+                and existing.gateway_mode == ('test' if gateway.is_test_mode() else 'live')
+                else None)
     gateway_form = GatewayAmountForm(
         request.POST if request.method == 'POST' and request.POST.get('payment_flow') == 'gateway' else None,
         booking=booking, initial={'amount': existing.amount if existing else booking.service.price},
@@ -77,8 +82,8 @@ def advance_payment_view(request, booking_id):
             # Reuse the existing order to prevent collecting multiple advances for one booking.
             with transaction.atomic():
                 locked_booking = Booking.objects.select_for_update().get(pk=booking.pk)
-                if locked_booking.status != 'Accepted':
-                    raise PermissionDenied('Booking is no longer accepted.')
+                if locked_booking.status not in ('Pending', 'Accepted'):
+                    raise PermissionDenied('Booking is not payable.')
                 payment = AdvancePayment.objects.select_for_update().filter(booking=locked_booking).first()
                 if payment and payment.status in ('Verified', 'Gateway Paid'):
                     raise PermissionDenied('An advance was already confirmed.')
@@ -116,8 +121,8 @@ def advance_payment_view(request, booking_id):
     elif request.method == 'POST' and request.POST.get('payment_flow') != 'gateway' and form.is_valid():
         with transaction.atomic():
             locked_booking = Booking.objects.select_for_update().get(pk=booking.pk)
-            if locked_booking.status != 'Accepted':
-                raise PermissionDenied('Booking no longer accepted.')
+            if locked_booking.status not in ('Pending', 'Accepted'):
+                raise PermissionDenied('Booking is not payable.')
             payment = AdvancePayment.objects.select_for_update().filter(booking=locked_booking).first()
             if payment and payment.status in ('Verified', 'Gateway Paid', 'Awaiting Payment'):
                 raise PermissionDenied('This advance is already confirmed or an online order is in progress.')

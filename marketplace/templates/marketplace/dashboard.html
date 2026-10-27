@@ -54,7 +54,7 @@
                         <form method="post" action="{% url 'update_booking_status' booking.id 'Completed' %}">{% csrf_token %}<button class="btn btn-action-complete btn-sm" type="submit" title="Mark as completed">Complete</button></form>
                       {% endif %}
                       {% if booking.status == 'Pending' or booking.status == 'Accepted' %}
-                        <form method="post" action="{% url 'update_booking_status' booking.id 'Cancelled' %}" onsubmit="return confirm('Reject this booking request?')">{% csrf_token %}<button class="btn btn-outline-danger btn-sm" type="submit">Reject</button></form>
+                        <form method="post" action="{% url 'update_booking_status' booking.id 'Cancelled' %}" onsubmit="return confirm('Reject this booking? If the customer already paid, contact admin about a refund; refunds are not automatic.')">{% csrf_token %}<button class="btn btn-outline-danger btn-sm" type="submit">Reject</button></form>
                       {% else %}<span class="action-muted">No actions</span>{% endif %}
                     {% else %}
                       {% if booking.status == 'Pending' or booking.status == 'Accepted' %}
@@ -64,11 +64,11 @@
                         <a class="btn btn-outline-danger btn-sm" href="{% url 'delete_booking' booking.id %}" title="Delete booking"><i class="fa-regular fa-trash-can me-1"></i>Delete</a>
                       {% endif %}
                     {% endif %}
-                    {% if profile.role == 'customer' and booking.status == 'Accepted' %}
+                    {% if profile.role == 'customer' and booking.status == 'Pending' or profile.role == 'customer' and booking.status == 'Accepted' %}
                       {% if booking.advance_payment %}
                         {% if booking.advance_payment.status == 'Gateway Paid' %}<span class="management-status status-verified">Gateway {% if booking.advance_payment.gateway_mode == 'test' %}TEST{% endif %} paid</span>{% elif booking.advance_payment.status == 'Verified' %}<span class="management-status status-verified">Advance verified</span>
                         {% else %}<a class="btn btn-outline-primary btn-sm" href="{% url 'advance_payment' booking.id %}"><i class="fa-solid fa-wallet me-1"></i>Advance: {{ booking.advance_payment.status }}</a>{% endif %}
-                      {% else %}<a class="btn btn-outline-primary btn-sm" href="{% url 'advance_payment' booking.id %}"><i class="fa-solid fa-wallet me-1"></i>Request advance</a>{% endif %}
+                      {% else %}<a class="btn btn-outline-primary btn-sm" href="{% url 'advance_payment' booking.id %}"><i class="fa-solid fa-wallet me-1"></i>Pay now</a>{% endif %}
                     {% endif %}
                     {% if profile.role == 'customer' and booking.status == 'Completed' %}<a class="btn btn-review btn-sm" href="{% url 'add_review' booking.service.id %}"><i class="fa-regular fa-star me-1"></i> Review</a>{% endif %}
                   </div>

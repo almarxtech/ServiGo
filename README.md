@@ -196,3 +196,10 @@ See **[NEW_FEATURES_AND_DEPLOY.md](NEW_FEATURES_AND_DEPLOY.md)** for roles, scre
 Staff can use `/staff/dashboard/` to access the dedicated **Payments**, **Complaints**, **Users**, **Services**, **Bookings** and **Reviews** pages. All routine tasks (advance verification, complaint replies, member suspension, service archiving, booking status management, and review moderation) work entirely within ServiGo. The Django Admin remains available only for low-level maintenance. See [`CUSTOM_ADMIN_DEPLOY.md`](CUSTOM_ADMIN_DEPLOY.md) for all URLs, security notes and GitHub/PythonAnywhere update steps.
 
 The advance flow is manual transfer verification, **not** an integrated online payment gateway.
+
+
+## New feature: Book & Pay Now
+
+Customers can now choose **Book & Pay Now** (Razorpay UPI/cards/netbanking) or
+**Book & Pay Later** from the booking form. Provider approval remains required.
+See `BOOK_AND_PAY_NOW_UPDATE.md` for payment/security/deployment details.
