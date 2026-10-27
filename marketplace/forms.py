@@ -87,9 +87,18 @@ class ComplaintForm(forms.ModelForm):
             bookings = Booking.objects.filter(customer=user)
         else:
             bookings = Booking.objects.none()
-        self.fields['booking'].queryset = bookings.select_related('service').order_by('-created_at')
+        self.fields['booking'].queryset = bookings.select_related('service', 'service__provider', 'customer').order_by('-created_at')
+        self.fields['booking'].label_from_instance = lambda booking: (
+            f'#{booking.pk} • {booking.service.title} • Customer: {booking.customer.username} • Provider: {booking.service.provider.username}'
+        )
         self.fields['booking'].required = False
         self.fields['booking'].empty_label = 'General issue (no booking)'
+
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get('category') in ('Booking', 'Service', 'Payment') and not cleaned.get('booking'):
+            self.add_error('booking', 'Select the related booking so admin can identify both customer and provider.')
+        return cleaned
 
     def clean_subject(self):
         value = self.cleaned_data['subject'].strip()
@@ -123,6 +132,7 @@ class AdvancePaymentForm(forms.ModelForm):
             self.fields['amount'].widget.attrs['max'] = str(booking.service.price)
             self.fields['amount'].help_text = f'Up to ₹{booking.service.price} (service listed price).'
         self.fields['transaction_reference'].required = False
+        self.fields['method'].choices = [c for c in AdvancePayment.METHOD_CHOICES if c[0] != 'Razorpay']
 
     def clean_amount(self):
         amount = self.cleaned_data['amount']
@@ -137,3 +147,24 @@ class AdvancePaymentForm(forms.ModelForm):
         if any(x in reference for x in ('\n', '\r')):
             raise forms.ValidationError('Use a single-line transfer reference.')
         return reference
+
+
+class GatewayAmountForm(forms.Form):
+    amount = forms.DecimalField(
+        min_value=0.01, decimal_places=2, max_digits=8,
+        label='Advance amount (₹)',
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '1'}),
+    )
+
+    def __init__(self, *args, booking=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.booking = booking
+        if booking:
+            self.fields['amount'].widget.attrs['max'] = str(booking.service.price)
+            self.fields['amount'].help_text = f'Up to ₹{booking.service.price} (listed service price).'
+
+    def clean_amount(self):
+        amount = self.cleaned_data['amount']
+        if self.booking and amount > self.booking.service.price:
+            raise forms.ValidationError('Advance cannot exceed the listed service price.')
+        return amount

@@ -4,6 +4,15 @@
 
 Django home-services marketplace. This update corrects **who can change bookings**, adds an **estimate that still works without an AI key**, and preserves existing customer booking history when service listings are removed.
 
+
+## Latest release — Custom admin, complaints and payment options
+
+- Custom staff pages: `/staff/dashboard/`, `/staff/payments/`, `/staff/complaints/`, `/staff/users/`, `/staff/services/`, `/staff/bookings/`, `/staff/reviews/`. No need to use Django admin for daily work.
+- Booking-linked complaints show both **Customer** and **Service Provider** names to authorized staff; only members of the booking can select it.
+- Advance options: manual UPI/bank transfer requests with staff confirmation **or** optional Razorpay Standard Checkout (UPI Intent/QR, cards and eligible netbanking/wallet methods) using merchant credentials. **Test Mode does not move money**; real payments require approved account and may incur transaction charges.
+- Gateway payment is marked **Gateway Paid** only after verified captured payment status, not merely browser success. Signed webhooks support asynchronous reconciliation; refunds are not automatic.
+- Read **[PAYMENTS_AND_COMPLAINTS_GUIDE.md](PAYMENTS_AND_COMPLAINTS_GUIDE.md)** for setup, Test Mode, webhook and PythonAnywhere deployment.
+
 ## Booking ownership (website and REST API)
 
 | Operation | Customer | Provider |
@@ -180,3 +189,10 @@ See **[NEW_FEATURES_AND_DEPLOY.md](NEW_FEATURES_AND_DEPLOY.md)** for roles, scre
 - `ADVANCE_PAYMENT_INSTRUCTIONS` is optional and belongs in the private production `.env` file.
 - Run `python manage.py migrate` after upgrading to create the two new tables.
 - `requests` is now listed in `requirements.txt` to support Google allauth during deployment.
+
+
+## Full custom admin pages (no Django Admin panel needed)
+
+Staff can use `/staff/dashboard/` to access the dedicated **Payments**, **Complaints**, **Users**, **Services**, **Bookings** and **Reviews** pages. All routine tasks (advance verification, complaint replies, member suspension, service archiving, booking status management, and review moderation) work entirely within ServiGo. The Django Admin remains available only for low-level maintenance. See [`CUSTOM_ADMIN_DEPLOY.md`](CUSTOM_ADMIN_DEPLOY.md) for all URLs, security notes and GitHub/PythonAnywhere update steps.
+
+The advance flow is manual transfer verification, **not** an integrated online payment gateway.

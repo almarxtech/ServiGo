@@ -1,21 +1,71 @@
 {% extends 'marketplace/base.html' %}
-{% block title %}Advance request | ServiGo{% endblock %}
+{% block title %}Advance payment | ServiGo{% endblock %}
 {% block content %}
 <div class="container container-wide management-page">
-  <a href="{% url 'dashboard' %}#my-bookings" class="back-link"><i class="fa-solid fa-arrow-left me-2"></i>My bookings</a>
-  <div class="management-heading"><div><span class="section-kicker">ADMIN-MANAGED ADVANCE</span><h1>{% if existing %}Update advance request{% else %}Request advance payment{% endif %}</h1><p>Your request will reach ServiGo admin, not the service provider. The admin must independently verify any transfer.</p></div><span class="management-heading-icon"><i class="fa-solid fa-wallet"></i></span></div>
-  <div class="row g-4 justify-content-center"><div class="col-lg-7"><div class="management-panel">
-    <div class="booking-summary mb-4"><div><small>BOOKING #BK-{{ booking.id }}</small><h3>{{ booking.service.title }}</h3><p>Provider: {{ booking.service.provider.username }} · {{ booking.booking_date|date:'d M Y, h:i A' }}</p></div><strong>₹{{ booking.service.price }}</strong></div>
-    {% if existing %}<div class="alert alert-info">Current request: <strong>{{ existing.get_status_display }}</strong>. {% if existing.admin_note %}Admin note: {{ existing.admin_note }}{% endif %}</div>{% endif %}
-    <div class="payment-instructions"><h2><i class="fa-solid fa-circle-info me-2"></i>How payment works</h2>
-      {% if payment_instructions %}<p class="mb-0">{{ payment_instructions|linebreaksbr }}</p>
-      {% else %}<p class="mb-0"><strong>Admin has not published transfer instructions.</strong> You may send an advance request for review, but do not transfer funds until admin gives verified payment details. This app does not charge you.</p>{% endif %}
-    </div>
-    <form method="post" novalidate>{% csrf_token %}
-      {% for field in form %}<div class="mb-3"><label class="form-label fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.help_text %}<div class="form-help">{{ field.help_text }}</div>{% endif %}{% for error in field.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}</div>{% endfor %}
-      <div class="alert alert-warning small"><i class="fa-solid fa-shield-halved me-2"></i>Submitting this form <strong>does not transfer money</strong>. Never enter card details, passwords, or an OTP. Admin will only mark Verified after checking actual receipt. Cancellation does not trigger an automatic refund.</div>
-      <button class="btn btn-primary btn-lg" type="submit"><i class="fa-solid fa-paper-plane me-2"></i>{% if existing %}Resubmit to admin{% else %}Send advance request{% endif %}</button>
-    </form>
-  </div></div></div>
+ <a class="back-link" href="{% url 'dashboard' %}#my-bookings"><i class="fa-solid fa-arrow-left me-2"></i>My bookings</a>
+ <div class="management-heading"><div><span class="section-kicker">SECURE ADVANCE OPTIONS</span><h1>Advance for Booking #BK-{{ booking.pk }}</h1><p>Choose a payment method. Only the booking customer can pay; admin sees all payment records.</p></div><span class="management-heading-icon"><i class="fa-solid fa-credit-card"></i></span></div>
+ <div class="booking-summary mb-4"><div><small>BOOKING #BK-{{ booking.pk }}</small><h3>{{ booking.service.title }}</h3><p>Provider: {{ booking.service.provider.username }} • {{ booking.booking_date|date:'d M Y, h:i A' }}</p></div><strong>₹{{ booking.service.price }}</strong></div>
+ {% if existing %}<div class="alert alert-info">Current advance: <strong>{{ existing.get_status_display }}</strong>{% if existing.gateway_mode %} ({{ existing.gateway_mode|upper }} MODE){% endif %}. {% if existing.admin_note %}{{ existing.admin_note }}{% endif %}</div>{% endif %}
+ <div class="row g-4">
+  <div class="col-lg-6"><section class="management-panel h-100">
+   <span class="section-kicker"><i class="fa-solid fa-bolt me-1"></i> ONLINE CHECKOUT</span>
+   <h2>Pay with UPI, cards or netbanking</h2>
+   <p>Razorpay Standard Checkout opens supported UPI apps/QR on mobile/desktop; enabled cards, netbanking and wallets may also appear.</p>
+   {% if gateway_enabled %}
+     {% if gateway_test_mode %}<div class="alert alert-warning"><strong>TEST MODE:</strong> Simulated payments only; no real money is deducted.</div>{% else %}<div class="alert alert-info">Live gateway configured. Real charges and settlement rules apply.</div>{% endif %}
+     <form method="post" id="gateway-init-form">{% csrf_token %}<input type="hidden" name="payment_flow" value="gateway">
+     <div class="mb-3"><label class="form-label fw-semibold" for="id_amount_gateway">{{ gateway_form.amount.label }}</label>
+      <input id="id_amount_gateway" type="number" min="0.01" max="{{ booking.service.price }}" step="0.01" class="form-control" name="amount" required value="{{ gateway_form.amount.value|default:'' }}">
+      {% for e in gateway_form.amount.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}{% for e in gateway_form.non_field_errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+      <small class="text-muted">Maximum ₹{{ booking.service.price }}.</small></div>
+     <button class="btn btn-primary w-100" type="submit" {% if existing.status == 'Submitted' %}disabled title="Manual transfer needs admin review first"{% endif %}>Start secure checkout</button>
+     </form>
+     {% if checkout %}<div class="alert alert-success mt-3"><strong>Checkout is ready.</strong> Click below to choose UPI / card / netbanking.</div><button id="launch-razorpay" type="button" class="btn btn-success w-100">Open Razorpay checkout</button>
+       <form id="razorpay-callback" action="{% url 'gateway_confirm' booking.pk %}" method="post" hidden>{% csrf_token %}<input name="razorpay_payment_id" id="razorpay_payment_id"><input name="razorpay_order_id" id="razorpay_order_id"><input name="razorpay_signature" id="razorpay_signature"></form>
+     {% endif %}
+   {% else %}<div class="alert alert-secondary"><strong>Gateway not configured.</strong> The admin can add Razorpay TEST keys in the server .env. Until then, use the manual request below.</div>{% endif %}
+  </section></div>
+  <div class="col-lg-6"><section class="management-panel h-100">
+   <span class="section-kicker"><i class="fa-solid fa-building-columns me-1"></i> MANUAL REQUEST</span>
+   <h2>Manual UPI / bank transfer</h2>
+   <p>Enter a reference after sending money through verified admin instructions. Admin must verify the bank receipt.</p>
+   <div class="payment-instructions mb-3"><h3 class="h6">Transfer instructions</h3>
+     {% if payment_instructions %}<p class="mb-0">{{ payment_instructions|linebreaksbr }}</p>
+     {% else %}<p class="mb-0">Admin has not provided payment details. Do not send money to unknown accounts.</p>{% endif %}
+   </div>
+   {% if existing.status == 'Awaiting Payment' %}<div class="alert alert-warning">An online order is pending. Contact admin if you want to change to manual transfer.</div>
+   {% else %}<form method="post" novalidate>{% csrf_token %}<input type="hidden" name="payment_flow" value="manual">
+      {% for field in form %}<div class="mb-3"><label class="form-label fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.help_text %}<small class="text-muted">{{ field.help_text }}</small>{% endif %}{% for e in field.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}</div>{% endfor %}
+      <button class="btn btn-outline-primary w-100" type="submit">Submit for admin verification</button></form>{% endif %}
+  </section></div>
+ </div>
+ <p class="text-muted small mt-3"><i class="fa-solid fa-shield-halved me-1"></i>Never enter card numbers, CVV, UPI PIN or OTP on ServiGo forms. Razorpay controls its own payment interface. Refunds are not automatic if a booking is cancelled.</p>
 </div>
+{% if checkout %}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+(function() {
+  const start = document.getElementById('launch-razorpay');
+  start.addEventListener('click', function() {
+    if (typeof Razorpay === 'undefined') { alert('Razorpay script did not load. Check internet access.'); return; }
+    const options = {
+      key: '{{ gateway_public_key|escapejs }}',
+      amount: {{ gateway_amount_paise }},
+      currency: 'INR',
+      name: 'ServiGo',
+      description: 'Advance for Booking #BK-{{ booking.pk }}',
+      order_id: '{{ checkout.gateway_order_id|escapejs }}',
+      handler: function(res) {
+        document.getElementById('razorpay_payment_id').value = res.razorpay_payment_id;
+        document.getElementById('razorpay_order_id').value = res.razorpay_order_id;
+        document.getElementById('razorpay_signature').value = res.razorpay_signature;
+        document.getElementById('razorpay-callback').submit();
+      },
+      theme: {color: '#2563eb'}
+    };
+    const rp = new Razorpay(options); rp.open();
+  });
+})();
+</script>
+{% endif %}
 {% endblock %}

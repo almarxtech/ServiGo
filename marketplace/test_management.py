@@ -53,7 +53,7 @@ class ServiGoManagementTests(TestCase):
     def test_customer_and_provider_can_submit_general_complaint(self):
         for user in (self.customer, self.provider):
             self.client.force_login(user)
-            response = self.client.post(reverse('my_complaints'), self.complaint_data())
+            response = self.client.post(reverse('my_complaints'), self.complaint_data(category='Other'))
             self.assertRedirects(response, reverse('my_complaints'))
             complaint = Complaint.objects.filter(submitted_by=user).get()
             self.assertEqual(complaint.status, 'Open')

@@ -16,7 +16,7 @@
       {% for complaint in complaints %}
         <article class="issue-card"><div class="d-flex align-items-start justify-content-between gap-2 flex-wrap"><div><small class="text-muted">#CP-{{ complaint.pk }} · {{ complaint.created_at|date:'d M Y, h:i A' }} · {{ complaint.category }}</small><h3>{{ complaint.subject }}</h3></div><span class="management-status status-{{ complaint.status|slugify }}">{{ complaint.status }}</span></div>
           <p>{{ complaint.description|linebreaksbr }}</p>
-          {% if complaint.booking %}<small class="text-muted"><i class="fa-regular fa-calendar me-1"></i>Related booking #BK-{{ complaint.booking_id }}</small>{% endif %}
+          {% if complaint.booking %}<small class="text-muted"><i class="fa-regular fa-calendar me-1"></i>Booking #BK-{{ complaint.booking_id }} • {{ complaint.booking.service.title }} • Customer: {{ complaint.booking.customer.username }} • Provider: {{ complaint.booking.service.provider.username }}</small>{% endif %}
           {% if complaint.admin_response %}<div class="admin-response"><strong><i class="fa-solid fa-reply me-2"></i>Admin response</strong><p class="mb-0">{{ complaint.admin_response|linebreaksbr }}</p></div>{% endif %}
         </article>
       {% empty %}<div class="empty-state"><span><i class="fa-regular fa-comment-dots"></i></span><h3>No complaints yet</h3><p>When you submit a complaint, its status and admin reply will appear here.</p></div>{% endfor %}

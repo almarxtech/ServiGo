@@ -100,16 +100,23 @@ class AdvancePayment(models.Model):
         ('UPI', 'UPI'),
         ('Bank Transfer', 'Bank transfer'),
         ('Other Transfer', 'Other transfer'),
+        ('Razorpay', 'Razorpay Checkout (UPI, cards, netbanking)'),
     )
     STATUS_CHOICES = (
         ('Submitted', 'Submitted — awaiting verification'),
         ('Verified', 'Verified by admin'),
         ('Rejected', 'Rejected'),
+        ('Awaiting Payment', 'Checkout opened — not paid'),
+        ('Gateway Paid', 'Captured via payment gateway'),
     )
     booking = models.OneToOneField(Booking, on_delete=models.PROTECT, related_name='advance_payment')
     amount = models.DecimalField(max_digits=8, decimal_places=2)
     method = models.CharField(max_length=30, choices=METHOD_CHOICES)
     transaction_reference = models.CharField(max_length=120, blank=True)
+    gateway_order_id = models.CharField(max_length=100, blank=True, unique=True, null=True)
+    gateway_payment_id = models.CharField(max_length=100, blank=True, unique=True, null=True)
+    gateway_method = models.CharField(max_length=30, blank=True)
+    gateway_mode = models.CharField(max_length=8, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Submitted')
     admin_note = models.TextField(max_length=1000, blank=True)
     reviewed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='reviewed_advances')

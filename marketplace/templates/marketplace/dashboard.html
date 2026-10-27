@@ -66,7 +66,7 @@
                     {% endif %}
                     {% if profile.role == 'customer' and booking.status == 'Accepted' %}
                       {% if booking.advance_payment %}
-                        {% if booking.advance_payment.status == 'Verified' %}<span class="management-status status-verified">Advance verified</span>
+                        {% if booking.advance_payment.status == 'Gateway Paid' %}<span class="management-status status-verified">Gateway {% if booking.advance_payment.gateway_mode == 'test' %}TEST{% endif %} paid</span>{% elif booking.advance_payment.status == 'Verified' %}<span class="management-status status-verified">Advance verified</span>
                         {% else %}<a class="btn btn-outline-primary btn-sm" href="{% url 'advance_payment' booking.id %}"><i class="fa-solid fa-wallet me-1"></i>Advance: {{ booking.advance_payment.status }}</a>{% endif %}
                       {% else %}<a class="btn btn-outline-primary btn-sm" href="{% url 'advance_payment' booking.id %}"><i class="fa-solid fa-wallet me-1"></i>Request advance</a>{% endif %}
                     {% endif %}

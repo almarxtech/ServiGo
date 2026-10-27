@@ -1,0 +1,21 @@
+{% extends 'marketplace/base.html' %}
+{% block title %}ServiGo Admin Control Center{% endblock %}
+{% block content %}
+<div class="container container-wide management-page admin-workspace">
+  <header class="admin-hero">
+    <div><span class="eyebrow"><i class="fa-solid fa-shield-halved me-2"></i> SERVIGO • MANAGEMENT</span><h1>Admin <span>workspace.</span></h1>
+    <p>Customers, providers, complaints, advance requests and bookings — managed entirely inside ServiGo.</p></div>
+    <div class="admin-hero-symbol" aria-hidden="true"><i class="fa-solid fa-shield-heart"></i></div>
+  </header>
+  <nav class="staff-navigation" aria-label="ServiGo admin sections">
+    <a href="{% url 'admin_dashboard' %}" {% if request.resolver_match.url_name == 'admin_dashboard' %}aria-current="page"{% endif %}><i class="fa-solid fa-chart-pie"></i> Overview</a>
+    <a href="{% url 'staff_payments' %}" {% if request.resolver_match.url_name == 'staff_payments' %}aria-current="page"{% endif %}><i class="fa-solid fa-wallet"></i> Payments</a>
+    <a href="{% url 'staff_complaints' %}" {% if request.resolver_match.url_name == 'staff_complaints' %}aria-current="page"{% endif %}><i class="fa-regular fa-comments"></i> Complaints</a>
+    <a href="{% url 'staff_users' %}" {% if request.resolver_match.url_name == 'staff_users' %}aria-current="page"{% endif %}><i class="fa-solid fa-users"></i> Users</a>
+    <a href="{% url 'staff_services' %}" {% if request.resolver_match.url_name == 'staff_services' %}aria-current="page"{% endif %}><i class="fa-solid fa-toolbox"></i> Services</a>
+    <a href="{% url 'staff_bookings' %}" {% if request.resolver_match.url_name == 'staff_bookings' %}aria-current="page"{% endif %}><i class="fa-regular fa-calendar-check"></i> Bookings</a>
+    <a href="{% url 'staff_reviews' %}" {% if request.resolver_match.url_name == 'staff_reviews' %}aria-current="page"{% endif %}><i class="fa-regular fa-star"></i> Reviews</a>
+  </nav>
+  {% block admin_content %}{% endblock %}
+</div>
+{% endblock %}

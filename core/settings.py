@@ -169,3 +169,8 @@ DEFAULT_FROM_EMAIL = 'noreply@servigo.local'
 # Optional manual-transfer details displayed on the advance request screen.
 # No online money collection occurs in ServiGo without an external gateway.
 ADVANCE_PAYMENT_INSTRUCTIONS = config('ADVANCE_PAYMENT_INSTRUCTIONS', default='').strip()
+
+# Razorpay Test Mode for academic demonstrations. Never commit secret keys.
+RAZORPAY_KEY_ID = config('RAZORPAY_KEY_ID', default='').strip()
+RAZORPAY_KEY_SECRET = config('RAZORPAY_KEY_SECRET', default='').strip()
+RAZORPAY_WEBHOOK_SECRET = config('RAZORPAY_WEBHOOK_SECRET', default='').strip()

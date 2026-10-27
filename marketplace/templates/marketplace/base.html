@@ -35,7 +35,6 @@
             <li class="nav-item"><a class="nav-link" href="{% url 'dashboard' %}"><i class="fa-solid fa-table-cells-large me-2"></i>Dashboard</a></li>
             {% if user.is_staff %}
               <li class="nav-item"><a class="nav-link" href="{% url 'admin_dashboard' %}"><i class="fa-solid fa-shield-halved me-2"></i>Admin workspace</a></li>
-              <li class="nav-item"><a class="nav-link" href="{% url 'admin:index' %}">Django admin</a></li>
             {% elif user.userprofile.role == 'provider' %}
               <li class="nav-item"><a class="nav-link" href="{% url 'add_service' %}"><i class="fa-solid fa-plus me-2"></i>Add service</a></li>
             {% else %}
