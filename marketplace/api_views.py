@@ -3,7 +3,7 @@ from django.db.models import Q
 from rest_framework import permissions, serializers, viewsets
 from rest_framework.exceptions import PermissionDenied
 
-from .models import Booking, Review, Service
+from .models import AdvancePayment, Booking, Review, Service
 from .serializers import BookingSerializer, ReviewSerializer, ServiceSerializer
 
 
@@ -64,7 +64,11 @@ class BookingViewSet(viewsets.ModelViewSet):
             raise PermissionDenied('Providers cannot delete customers’ bookings.')
         if instance.status not in ('Pending', 'Accepted', 'Cancelled'):
             raise PermissionDenied('Completed bookings are retained as history.')
-        instance.delete()
+        if AdvancePayment.objects.filter(booking=instance).exists():
+            instance.status = 'Cancelled'
+            instance.save(update_fields=['status'])
+        else:
+            instance.delete()
 
 
 class ReviewViewSet(viewsets.ModelViewSet):

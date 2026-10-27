@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="{% static 'marketplace/style.css' %}">
   <link rel="stylesheet" href="{% static 'marketplace/motion.css' %}">
   <link rel="stylesheet" href="{% static 'marketplace/visuals.css' %}">
+  <link rel="stylesheet" href="{% static 'marketplace/management.css' %}">
   <script defer src="{% static 'marketplace/motion.js' %}"></script>
   <script>
     try { document.documentElement.setAttribute('data-bs-theme', localStorage.getItem('servigo-theme') || 'light'); } catch (_) {}
@@ -32,18 +33,22 @@
         <ul class="navbar-nav mx-auto gap-lg-3 align-items-lg-center">
           {% if user.is_authenticated %}
             <li class="nav-item"><a class="nav-link" href="{% url 'dashboard' %}"><i class="fa-solid fa-table-cells-large me-2"></i>Dashboard</a></li>
-            {% if user.userprofile.role == 'provider' %}
+            {% if user.is_staff %}
+              <li class="nav-item"><a class="nav-link" href="{% url 'admin_dashboard' %}"><i class="fa-solid fa-shield-halved me-2"></i>Admin workspace</a></li>
+              <li class="nav-item"><a class="nav-link" href="{% url 'admin:index' %}">Django admin</a></li>
+            {% elif user.userprofile.role == 'provider' %}
               <li class="nav-item"><a class="nav-link" href="{% url 'add_service' %}"><i class="fa-solid fa-plus me-2"></i>Add service</a></li>
             {% else %}
               <li class="nav-item"><a class="nav-link" href="{% url 'dashboard' %}#explore"><i class="fa-solid fa-compass me-2"></i>Explore services</a></li>
             {% endif %}
+            {% if not user.is_staff %}<li class="nav-item"><a class="nav-link" href="{% url 'my_complaints' %}"><i class="fa-regular fa-comment-dots me-2"></i>Complaints</a></li>{% endif %}
           {% endif %}
           <li class="nav-item"><a class="nav-link" href="{% url 'about' %}"><i class="fa-regular fa-circle-question me-2"></i>About us</a></li>
         </ul>
         <div class="nav-actions d-flex align-items-center gap-2 mt-3 mt-lg-0">
           <button type="button" id="themeToggle" class="btn theme-toggle" aria-label="Toggle dark mode" title="Toggle light or dark theme"><i class="fa-solid fa-moon"></i></button>
           {% if user.is_authenticated %}
-            <a class="profile-chip" href="{% url 'profile' %}"><span class="avatar">{{ user.username|first|upper }}</span><span class="d-none d-sm-inline">{{ user.username|truncatechars:16 }}</span></a>
+            <a class="profile-chip" href="{% if user.is_staff %}{% url 'admin_dashboard' %}{% else %}{% url 'profile' %}{% endif %}"><span class="avatar">{{ user.username|first|upper }}</span><span class="d-none d-sm-inline">{{ user.username|truncatechars:16 }}</span></a>
             <form method="post" action="{% url 'logout' %}" class="mb-0">{% csrf_token %}<button class="btn btn-outline-primary btn-sm nav-logout" type="submit">Log out</button></form>
           {% else %}
             <a href="{% url 'login' %}" class="btn btn-link nav-login">Log in</a>
@@ -78,7 +83,7 @@
           <p class="mt-3 mb-0 footer-copy">A better way to find trusted help and get things done around your home.</p>
         </div>
         <div class="col-6 col-lg-3"><h6>Discover</h6><a href="{% url 'dashboard' %}">Dashboard</a><a href="{% url 'about' %}">About ServiGo</a></div>
-        <div class="col-6 col-lg-3"><h6>Your account</h6>{% if user.is_authenticated %}<a href="{% url 'profile' %}">My profile</a>{% else %}<a href="{% url 'login' %}">Sign in</a><a href="{% url 'register' %}">Create account</a>{% endif %}</div>
+        <div class="col-6 col-lg-3"><h6>Your account</h6>{% if user.is_authenticated %}<a href="{% if user.is_staff %}{% url 'admin_dashboard' %}{% else %}{% url 'profile' %}{% endif %}">{% if user.is_staff %}Admin workspace{% else %}My profile{% endif %}</a>{% else %}<a href="{% url 'login' %}">Sign in</a><a href="{% url 'register' %}">Create account</a>{% endif %}</div>
       </div>
       <div class="footer-bottom">© 2026 ServiGo. Made for easier everyday living. <span>Home is where we help.</span></div>
     </div>

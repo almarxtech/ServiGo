@@ -168,3 +168,15 @@ python manage.py runserver
 4. Hard refresh your web browser using `Ctrl + F5` so `visuals.css` loads. On a deployed server also collect static files and configure static hosting as usual.
 
 **61 automated tests passed** for this version, including seven new category/timeline/accessibility checks. This upgrade changes visual presentation; it does not change provider/customer permissions or any AI credentials/integration.
+
+
+## New: custom admin dashboard, complaints & advance requests
+
+See **[NEW_FEATURES_AND_DEPLOY.md](NEW_FEATURES_AND_DEPLOY.md)** for roles, screenshots to test, a safety explanation of manual payments, and GitHub/PythonAnywhere update instructions.
+
+- Staff / superusers: `/staff/dashboard/` — platform counts, reply to customer/provider complaints, verify/reject manually reported advance payments.
+- Customers & providers: `/complaints/` — submit a private support issue and see admin replies.
+- Customers: a **Request advance** option on Accepted bookings; admin verification is manual. **No actual payment is processed by this code.**
+- `ADVANCE_PAYMENT_INSTRUCTIONS` is optional and belongs in the private production `.env` file.
+- Run `python manage.py migrate` after upgrading to create the two new tables.
+- `requests` is now listed in `requirements.txt` to support Google allauth during deployment.

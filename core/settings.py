@@ -165,3 +165,7 @@ HF_API_KEY = config('HF_API_KEY', default='')
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DEFAULT_FROM_EMAIL = 'noreply@servigo.local'
+
+# Optional manual-transfer details displayed on the advance request screen.
+# No online money collection occurs in ServiGo without an external gateway.
+ADVANCE_PAYMENT_INSTRUCTIONS = config('ADVANCE_PAYMENT_INSTRUCTIONS', default='').strip()

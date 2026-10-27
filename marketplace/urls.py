@@ -1,7 +1,7 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from . import api_views, views
+from . import api_views, views, management_views
 
 router = DefaultRouter()
 router.register(r'api/reviews', api_views.ReviewViewSet, basename='review-api')
@@ -14,6 +14,11 @@ urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
     path('profile/', views.profile_view, name='profile'),
+    path('complaints/', management_views.my_complaints, name='my_complaints'),
+    path('booking/<int:booking_id>/advance/', management_views.advance_payment_view, name='advance_payment'),
+    path('staff/dashboard/', management_views.admin_dashboard, name='admin_dashboard'),
+    path('staff/complaints/<int:complaint_id>/review/', management_views.admin_review_complaint, name='admin_review_complaint'),
+    path('staff/advances/<int:payment_id>/review/', management_views.admin_review_payment, name='admin_review_payment'),
     path('about/', views.about_view, name='about'),
 
     path('service/add/', views.add_service_view, name='add_service'),

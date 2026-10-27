@@ -59,3 +59,66 @@ class Review(models.Model):
 
     def __str__(self):
         return f"{self.customer.username} - {self.service.title} ({self.rating}★)"
+
+class Complaint(models.Model):
+    """A customer or provider support issue, reviewed only by staff."""
+    CATEGORY_CHOICES = (
+        ('Booking', 'Booking issue'),
+        ('Service', 'Service quality'),
+        ('Payment', 'Payment issue'),
+        ('Account', 'Account issue'),
+        ('Other', 'Other'),
+    )
+    STATUS_CHOICES = (
+        ('Open', 'Open'),
+        ('In Review', 'In review'),
+        ('Resolved', 'Resolved'),
+        ('Dismissed', 'Dismissed'),
+    )
+    submitted_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='submitted_complaints')
+    booking = models.ForeignKey(Booking, on_delete=models.SET_NULL, null=True, blank=True, related_name='complaints')
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
+    subject = models.CharField(max_length=120)
+    description = models.TextField(max_length=2000)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Open')
+    admin_response = models.TextField(blank=True, max_length=2000)
+    reviewed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='reviewed_complaints')
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'#{self.pk}: {self.subject}'
+
+
+class AdvancePayment(models.Model):
+    """Manual advance-payment request; this does NOT collect or transfer funds."""
+    METHOD_CHOICES = (
+        ('UPI', 'UPI'),
+        ('Bank Transfer', 'Bank transfer'),
+        ('Other Transfer', 'Other transfer'),
+    )
+    STATUS_CHOICES = (
+        ('Submitted', 'Submitted — awaiting verification'),
+        ('Verified', 'Verified by admin'),
+        ('Rejected', 'Rejected'),
+    )
+    booking = models.OneToOneField(Booking, on_delete=models.PROTECT, related_name='advance_payment')
+    amount = models.DecimalField(max_digits=8, decimal_places=2)
+    method = models.CharField(max_length=30, choices=METHOD_CHOICES)
+    transaction_reference = models.CharField(max_length=120, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Submitted')
+    admin_note = models.TextField(max_length=1000, blank=True)
+    reviewed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='reviewed_advances')
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'Advance #{self.pk} for Booking #{self.booking_id} ({self.status})'

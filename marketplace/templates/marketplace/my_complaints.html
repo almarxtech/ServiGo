@@ -1,0 +1,26 @@
+{% extends 'marketplace/base.html' %}
+{% block title %}My complaints | ServiGo{% endblock %}
+{% block content %}
+<div class="container container-wide management-page">
+  <a class="back-link" href="{% url 'dashboard' %}"><i class="fa-solid fa-arrow-left me-2"></i>Dashboard</a>
+  <div class="management-heading"><div><span class="section-kicker">SERVIGO SUPPORT DESK</span><h1>Raise a complaint</h1><p>Customers and providers can contact the admin team. Only you and staff can see your complaint details.</p></div><span class="management-heading-icon"><i class="fa-solid fa-headset"></i></span></div>
+  <div class="row g-4">
+    <div class="col-xl-5"><div class="management-panel">
+      <h2>Tell us what happened</h2><p class="text-muted small">Choose a related booking if your issue concerns a customer, provider, or payment. Please do not share passwords or card details.</p>
+      <form method="post" novalidate>{% csrf_token %}
+      {% for field in form %}<div class="mb-3"><label for="{{ field.id_for_label }}" class="form-label fw-semibold">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}</div>{% endfor %}
+      <button type="submit" class="btn btn-primary w-100"><i class="fa-solid fa-paper-plane me-2"></i>Send to admin</button></form>
+    </div></div>
+    <div class="col-xl-7"><div class="management-panel">
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3"><h2 class="mb-0">My complaint history</h2><span class="count-tag">{{ complaints|length }} requests</span></div>
+      {% for complaint in complaints %}
+        <article class="issue-card"><div class="d-flex align-items-start justify-content-between gap-2 flex-wrap"><div><small class="text-muted">#CP-{{ complaint.pk }} · {{ complaint.created_at|date:'d M Y, h:i A' }} · {{ complaint.category }}</small><h3>{{ complaint.subject }}</h3></div><span class="management-status status-{{ complaint.status|slugify }}">{{ complaint.status }}</span></div>
+          <p>{{ complaint.description|linebreaksbr }}</p>
+          {% if complaint.booking %}<small class="text-muted"><i class="fa-regular fa-calendar me-1"></i>Related booking #BK-{{ complaint.booking_id }}</small>{% endif %}
+          {% if complaint.admin_response %}<div class="admin-response"><strong><i class="fa-solid fa-reply me-2"></i>Admin response</strong><p class="mb-0">{{ complaint.admin_response|linebreaksbr }}</p></div>{% endif %}
+        </article>
+      {% empty %}<div class="empty-state"><span><i class="fa-regular fa-comment-dots"></i></span><h3>No complaints yet</h3><p>When you submit a complaint, its status and admin reply will appear here.</p></div>{% endfor %}
+    </div></div>
+  </div>
+</div>
+{% endblock %}

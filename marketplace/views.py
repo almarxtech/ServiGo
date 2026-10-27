@@ -13,7 +13,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
 from .forms import BookingDateForm, ServiceForm, UserRegistrationForm
-from .models import Booking, Review, Service, UserProfile
+from .models import AdvancePayment, Booking, Review, Service, UserProfile
 from .ai_services import (AIUnavailable, configured_provider, fallback_chat_reply,
                           generate_text, get_ai_cost_estimate)
 
@@ -54,11 +54,7 @@ def register_view(request):
             phone_number=form.cleaned_data['phone_number'],
             address=form.cleaned_data['address'],
         )
-        login(
-            request,
-            user,
-            backend="django.contrib.auth.backends.ModelBackend"
-        )
+        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
         messages.success(request, 'Your ServiGo account is ready. Welcome!')
         return redirect('dashboard')
     return render(request, 'marketplace/register.html', {'form': form})
@@ -83,6 +79,8 @@ def logout_view(request):
 
 @login_required(login_url='login')
 def dashboard_view(request):
+    if request.user.is_staff:
+        return redirect('admin_dashboard')
     profile, _ = UserProfile.objects.get_or_create(user=request.user, defaults={'role': 'customer'})
     query = request.GET.get('q', '').strip()
     category_filter = request.GET.get('category', '').strip()
@@ -215,12 +213,20 @@ def delete_booking_view(request, booking_id):
     booking = get_object_or_404(Booking, pk=booking_id, customer=request.user)
     if booking.status not in ('Pending', 'Accepted', 'Cancelled'):
         raise PermissionDenied('Completed bookings are kept in your history.')
+    payment_exists = AdvancePayment.objects.filter(booking=booking).exists()
     if request.method == 'POST':
-        booking.delete()
-        messages.success(request, 'Booking deleted successfully.')
+        if payment_exists:
+            # Retain the booking and payment audit trail; no automated refund is issued.
+            booking.status = 'Cancelled'
+            booking.save(update_fields=['status'])
+            messages.warning(request, 'Booking cancelled, not deleted, because an advance record exists. Contact admin for any refund.')
+        else:
+            booking.delete()
+            messages.success(request, 'Booking deleted successfully.')
         return redirect('dashboard')
     return render(request, 'marketplace/confirm_delete.html', {
         'kind': 'booking', 'item_name': booking.service.title, 'booking': booking,
+        'payment_exists': payment_exists,
     })
 
 
